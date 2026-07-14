@@ -1,0 +1,1 @@
+export { default as ARROW_LEFT } from './arrow_left.svg';
