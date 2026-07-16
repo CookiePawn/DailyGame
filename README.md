@@ -183,7 +183,7 @@ type PlayerState = {
 ```
 Use the attached image as a strict visual-production reference.
 
-Create one NEW Korean office employee character.
+Create one NEW Korean workplace character.
 The character identity, job, hairstyle, clothes, pose, facial features, and prop must be original and different from every character in the reference image.
 
 However, do not reinterpret, modernize, redesign, or invent a new art style.
@@ -196,14 +196,24 @@ Match the reference image's character design system as closely as possible:
 - Same warm beige, brown, charcoal, and muted-color palette
 - Same soft, simple cel shading with minimal texture
 - Same 2D Korean casual mobile game employee-card illustration look
-- Same friendly, slightly chibi but adult office-worker feeling
+- Same friendly, slightly chibi but adult workplace-character feeling
 - Same level of detail and visual simplicity
 - Same centered waist-up collectible employee portrait composition
 
 Create:
-A Korean [직군] in their [나이대].
-[헤어스타일], [의상], [소품].
-[표정과 포즈].
+Randomly invent one original Korean workplace character.
+
+Randomly select exactly one job, then design the clothing, prop, hairstyle, expression, and pose to clearly communicate that job.
+
+Use a wide variety of workplaces and roles:
+software developer, game developer, UX designer, illustrator, video editor, marketer, social-media manager, product planner, photographer, barista, florist, chef, baker, delivery rider, warehouse worker, factory technician, construction supervisor, laboratory researcher, veterinarian, nurse, teacher, librarian, fitness trainer, hair stylist, mechanic, hotel receptionist, flight attendant, firefighter, police officer, security guard, office manager, accountant, lawyer, or startup founder.
+
+Important variety rules:
+- Do NOT default to a business suit, dress shirt with tie, blazer, formal office uniform, or generic corporate outfit.
+- A business suit may appear only when the randomly chosen role genuinely requires it, such as lawyer, executive, accountant, hotel receptionist, or sales manager.
+- Choose clothing that visually fits the selected job: hoodie, cardigan, apron, work jacket, lab coat, athletic wear, safety vest, utility uniform, casual shirt, knitwear, chef uniform, or other role-appropriate clothing.
+- Include exactly one role-appropriate prop: laptop, tablet, camera, sketchbook, coffee tool, flower bouquet, clipboard, toolbox, microscope, book, dumbbell, hair dryer, wrench, package, or other appropriate item.
+- Make the character clearly distinct from prior outputs in job, silhouette, clothing color, hairstyle, prop, and pose.
 
 Composition:
 1:1 square canvas.
@@ -212,6 +222,9 @@ Waist-up portrait.
 Character centered.
 Keep the entire head, shoulders, arms, hands, and prop inside the frame.
 Use the same compact portrait framing as the attached reference.
+Make the character large and tightly framed, occupying approximately 88–92% of the canvas height.
+Keep only a minimal safety margin around the outermost parts of the character.
+Do not leave large empty padding or unused space.
 No card border, no UI, no labels.
 
 Background:
@@ -223,4 +236,6 @@ Style-match the attached reference image closely.
 Do not make the character semi-realistic, painterly, glossy 3D, anime with large sparkly eyes, or generic vector art.
 Do not add text, letters, logos, symbols, watermark, signature, or extra objects.
 Do not use #00FF00 in the character.
+Avoid generic suited office workers unless a formal outfit is essential to the selected role.
+For each new generation, create a noticeably different employee concept from previous outputs.
 ```
