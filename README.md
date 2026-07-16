@@ -181,41 +181,46 @@ type PlayerState = {
 
 ![Character EX](./docs/character_ex.png)
 ```
-Use case: stylized-concept
-Asset type: square employee portrait for a Korean casual mobile idle management game
+Use the attached image as a strict visual-production reference.
 
-Input image:
-Use the attached image only as a style reference.
-Match its character design language: warm beige card-game mood, clean dark outlines, soft shading, rounded facial features, compact cute proportions, friendly Korean office-worker characters, and polished 2D mobile-game illustration quality.
-Do not copy any existing character, pose, clothing, or composition from the reference image.
+Create one NEW Korean office employee character.
+The character identity, job, hairstyle, clothes, pose, facial features, and prop must be original and different from every character in the reference image.
 
-Primary request:
-Create one new employee character: a Korean junior software developer.
+However, do not reinterpret, modernize, redesign, or invent a new art style.
+Match the reference image's character design system as closely as possible:
 
-Subject:
-A friendly Korean man in his mid-20s with short, slightly tousled black hair.
-He wears a dark charcoal hoodie over a light beige T-shirt.
-He holds an open gray laptop naturally in front of his body with both hands.
-The laptop screen contains only abstract colored lines and blocks, with no readable content.
+- Same head-to-body proportion: oversized rounded head, compact narrow shoulders, short upper body
+- Same face construction: large dark oval eyes, tiny simple nose, small subtle mouth, soft rounded jaw
+- Same hairstyle rendering: dark outlined hair clumps with simple internal shading
+- Same black/dark-brown outline thickness and clean line quality
+- Same warm beige, brown, charcoal, and muted-color palette
+- Same soft, simple cel shading with minimal texture
+- Same 2D Korean casual mobile game employee-card illustration look
+- Same friendly, slightly chibi but adult office-worker feeling
+- Same level of detail and visual simplicity
+- Same centered waist-up collectible employee portrait composition
+
+Create:
+A Korean [직군] in their [나이대].
+[헤어스타일], [의상], [소품].
+[표정과 포즈].
 
 Composition:
-1:1 square image.
-Single character only.
-Waist-up employee portrait.
-Character centered, facing slightly three-quarter toward the viewer.
-Keep the head, shoulders, arms, hands, and entire laptop fully inside the frame.
-Use comfortable empty margin around the character.
-No employee card frame or UI.
-
-Expression:
-Gentle smile, quiet confidence, approachable and enthusiastic.
+1:1 square canvas.
+One character only.
+Waist-up portrait.
+Character centered.
+Keep the entire head, shoulders, arms, hands, and prop inside the frame.
+Use the same compact portrait framing as the attached reference.
+No card border, no UI, no labels.
 
 Background:
-Perfectly flat solid #00FF00 chroma-key background for later removal.
-No shadow, floor, environment, decoration, gradient, reflection, text, or particles.
+Perfectly flat solid #00FF00 chroma-key background.
+No shadow, floor, gradient, decoration, or environment.
 
-Constraints:
-Preserve the reference image's overall illustration style only.
-No text, letters, numbers, logos, watermark, signature, or border.
-Do not use #00FF00 in the character, clothing, or laptop.
+Strict constraints:
+Style-match the attached reference image closely.
+Do not make the character semi-realistic, painterly, glossy 3D, anime with large sparkly eyes, or generic vector art.
+Do not add text, letters, logos, symbols, watermark, signature, or extra objects.
+Do not use #00FF00 in the character.
 ```
