@@ -180,75 +180,87 @@ type PlayerState = {
 **캐릭터 생성**
 ```
 Use case: stylized-concept
-Asset type: square employee portrait art for a casual mobile idle gacha game
+Asset type: square employee portrait illustration for a Korean casual mobile idle management game
 
-Create a single Korean junior software developer character for a casual mobile idle gacha game.
+Create a single Korean junior software developer character.
 
 Subject:
-A friendly Korean man in his mid-20s with short, neat black hair and round glasses. He wears a dark navy zip-up hoodie over a simple light beige T-shirt. He is holding an open laptop toward the viewer with both hands. The laptop screen displays a simple generic coding interface made of colorful abstract UI blocks and syntax-colored lines only, with absolutely no readable text, letters, numbers, logos, or symbols.
+A friendly Korean man in his mid-20s.
+Short, neat black hair.
+Round black glasses.
+Dark navy zip-up hoodie over a simple light beige T-shirt.
+Holding an open laptop toward the viewer with both hands.
+The laptop screen shows a generic coding interface using colorful abstract UI blocks and syntax-colored lines only. No readable text, letters, numbers, logos, symbols, or recognizable programming language.
 
 Style:
-Premium Korean casual mobile game character illustration.
-Cute office worker collectible character.
-High-quality 2D illustration.
-Warm and approachable.
+Premium Korean casual mobile game illustration.
+Cute collectible office employee.
+Warm, friendly, approachable.
 Soft cel shading.
-Clean, crisp line art.
+Clean and polished line art.
 Rounded shapes.
-Slightly chibi proportions while maintaining a believable young adult appearance.
+Slightly chibi proportions.
 Large expressive eyes.
 Small nose and mouth.
-Friendly facial expression.
-Modern Korean idle RPG / tycoon / management game character style.
-Consistent with collectible employee portraits found in casual mobile games.
+Young adult appearance.
+Simple but premium rendering.
+High readability at small sizes.
+Korean mobile idle tycoon game character style.
+Corporate simulation game NPC portrait.
+Collectible employee card illustration.
+Consistent visual style suitable for a roster of office employees.
 
 Composition:
-1:1 square image.
+Square 1:1 aspect ratio.
 Single character only.
 Waist-up portrait.
-Upper body completely visible.
-Laptop completely visible.
+Entire upper body fully visible.
+Laptop fully visible.
 Character centered.
-Character occupies approximately 60–70% of the canvas.
-Comfortable empty margin around the character.
+Character fills approximately 65% of the canvas.
+Comfortable empty margin on every side.
 Large head-to-body ratio.
-Facing forward with a subtle three-quarter angle.
-Designed to fit naturally inside a collectible character card.
+Facing slightly three-quarter toward the viewer.
+Natural relaxed posture.
+Designed to fit inside a collectible employee card.
 
 Expression:
 Gentle smile.
 Quiet confidence.
 Friendly.
 Enthusiastic.
-Professional but approachable.
-Presenting the laptop naturally toward the viewer.
+Professional.
+Approachable.
+Presenting the laptop naturally.
 
 Color palette:
 Warm cream.
 Dark navy.
-Charcoal.
+Charcoal gray.
 Muted beige.
-Soft blue accents.
-Warm, cozy color harmony.
+Subtle desaturated blue accents.
+Soft warm lighting.
 
 Rendering:
-Smooth professional mobile game rendering.
-Soft highlights.
-Subtle ambient lighting.
+Premium 2D mobile game artwork.
+Soft cel shading.
 Minimal texture.
+Smooth color transitions.
 Clean silhouette.
-High readability at small icon size.
-Premium illustration quality.
+Simple clothing folds.
+No exaggerated rendering.
+High-quality Korean game illustration.
 
 Background:
 Perfectly flat solid #00FF00 chroma-key background.
+Pure #00FF00 only.
 No gradient.
 No shadow.
 No reflections.
 No floor.
-No environmental objects.
-No particles.
+No environment.
 No decorations.
+No particles.
 
 Constraints:
 Single character only.
@@ -259,13 +271,13 @@ No readable code.
 No logos.
 No watermark.
 No signature.
-No border.
 No frame.
+No border.
 No UI.
-No speech bubble.
-No accessories floating around the character.
+No speech bubbles.
+No floating accessories.
 No additional objects except the laptop.
 Keep the entire upper body and laptop fully inside the frame.
-Do not crop the head, shoulders, arms, or laptop.
+Do not crop the head, shoulders, arms, hands, or laptop.
 Do not use #00FF00 anywhere in the character, clothing, laptop, or screen.
 ```
