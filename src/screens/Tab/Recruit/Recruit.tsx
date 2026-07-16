@@ -9,8 +9,10 @@ import {
   View,
 } from 'react-native';
 import { useAtom, useSetAtom } from 'jotai';
+import LottieView from 'lottie-react-native';
+import { Animation_View, EmployeeStatRadar } from '@/components';
+import { Assets } from '@/assets';
 import {
-  EMPLOYEE_STAT_LABELS,
   EMPLOYEE_TEMPLATES,
   FREE_RECRUIT_COOLDOWN_MS,
   GRADE_COLORS,
@@ -19,20 +21,26 @@ import {
 import {
   goldAtom,
   lastFreeRecruitAtAtom,
-  recruitEmployeeAtom,
+  recruitEmployeesAtom,
   totalEarnedGoldAtom,
   totalRecruitCountAtom,
 } from '@/lib/jotai';
-import { Employee, EmployeeStatKey, RecruitmentMethod } from '@/models';
+import { AnimationType, Employee, RecruitmentMethod } from '@/models';
 
-const STAT_KEYS: EmployeeStatKey[] = [
-  'workSkill',
-  'creativity',
-  'diligence',
-  'teamwork',
-  'leadership',
-  'luck',
+type PaidRecruitmentMethod = Exclude<RecruitmentMethod, 'job-posting'>;
+type RecruitAnimationPhase = 'idle' | 'signature' | 'result';
+
+const PAID_METHODS: PaidRecruitmentMethod[] = [
+  'open-recruitment',
+  'experienced-hire',
+  'headhunting',
 ];
+
+const DRAW_IMAGES: Record<PaidRecruitmentMethod, number> = {
+  'open-recruitment': Assets.Images.Draw.DRAW_LV1,
+  'experienced-hire': Assets.Images.Draw.DRAW_LV2,
+  headhunting: Assets.Images.Draw.DRAW_LV3,
+};
 
 const formatGold = (value: number) => value.toLocaleString('ko-KR');
 
@@ -51,9 +59,12 @@ const Recruit = () => {
   const [totalRecruitCount] = useAtom(totalRecruitCountAtom);
   const [lastFreeRecruitAt] = useAtom(lastFreeRecruitAtAtom);
   const [totalEarnedGold] = useAtom(totalEarnedGoldAtom);
-  const recruitEmployee = useSetAtom(recruitEmployeeAtom);
+  const recruitEmployees = useSetAtom(recruitEmployeesAtom);
   const [result, setResult] = useState<Employee | null>(null);
   const [resultMethod, setResultMethod] = useState<RecruitmentMethod | null>(null);
+  const [isRecruiting, setIsRecruiting] = useState(false);
+  const [recruitAnimationPhase, setRecruitAnimationPhase] = useState<RecruitAnimationPhase>('idle');
+  const [recruitAnimationKey, setRecruitAnimationKey] = useState(0);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -68,11 +79,22 @@ const Recruit = () => {
   const freeRecruitLabel = getFreeRecruitLabel(lastFreeRecruitAt, now);
   const isFreeRecruitAvailable = freeRecruitLabel === '무료 채용';
 
-  const onRecruit = (method: RecruitmentMethod) => {
-    const employee = recruitEmployee(method);
-    if (employee) {
-      setResult(employee);
-      setResultMethod(method);
+  const onRecruit = async (method: RecruitmentMethod, count = 1) => {
+    if (isRecruiting) return;
+
+    setIsRecruiting(true);
+    try {
+      const employees = await recruitEmployees({ method, count });
+      if (employees?.[0]) {
+        setResult(employees[0]);
+        setResultMethod(method);
+        setRecruitAnimationKey(currentKey => currentKey + 1);
+        setRecruitAnimationPhase('signature');
+      }
+    } catch (error) {
+      console.error('직원 채용을 저장하지 못했습니다.', error);
+    } finally {
+      setIsRecruiting(false);
     }
   };
 
@@ -88,21 +110,16 @@ const Recruit = () => {
           <Text style={styles.subtitle}>채용 방법에 따라 더 좋은 육각형 스탯을 기대할 수 있어요.</Text>
 
         <View style={styles.recruitCard}>
-          <View style={styles.silhouette}>
-            <Text style={styles.questionMark}>?</Text>
-          </View>
-          <Text style={styles.recruitHint}>어떤 직원이 합류할까요?</Text>
+          <Text style={styles.recruitHint}>어떤 방식으로 인재를 채용할까요?</Text>
 
-          <View style={styles.methodList}>
-            {(Object.keys(RECRUITMENT_METHODS) as RecruitmentMethod[]).map(method => {
+          <View style={styles.drawCardList}>
+            {PAID_METHODS.map(method => {
               const recruitmentMethod = RECRUITMENT_METHODS[method];
               const isUnlocked =
                 totalRecruitCount >= recruitmentMethod.requiredRecruitCount &&
                 totalEarnedGold >= recruitmentMethod.requiredEarnedGold;
-              const isAvailable = recruitmentMethod.isFree
-                ? isFreeRecruitAvailable
-                : gold >= recruitmentMethod.cost;
-              const isDisabled = !isUnlocked || !isAvailable;
+              const isAvailable = gold >= recruitmentMethod.cost;
+              const isDisabled = !isUnlocked || !isAvailable || isRecruiting;
               const unlockRequirements = [
                 recruitmentMethod.requiredRecruitCount > 0
                   ? `누적 채용 ${totalRecruitCount} / ${recruitmentMethod.requiredRecruitCount}회`
@@ -119,31 +136,56 @@ const Recruit = () => {
                   disabled={isDisabled}
                   onPress={() => onRecruit(method)}
                   style={({ pressed }) => [
-                    styles.methodCard,
-                    method === 'experienced-hire' && styles.experiencedCard,
-                    method === 'headhunting' && styles.headhuntingCard,
+                    styles.drawCard,
+                    method === 'experienced-hire' && styles.experiencedDrawCard,
+                    method === 'headhunting' && styles.headhuntingDrawCard,
                     (isDisabled || pressed) && styles.disabledButton,
                   ]}
                 >
-                  <View style={styles.methodTextContainer}>
-                    <Text style={styles.methodName}>{isUnlocked ? recruitmentMethod.name : `${recruitmentMethod.name} LOCK`}</Text>
-                    <Text style={styles.methodDescription}>{recruitmentMethod.description}</Text>
-                    {isUnlocked ? (
-                      <Text style={styles.methodRange}>스탯 범위 {recruitmentMethod.minStat}~{recruitmentMethod.maxStat}</Text>
-                    ) : (
-                      unlockRequirements.map(requirement => (
-                        <Text key={requirement} style={styles.lockRequirement}>{requirement}</Text>
-                      ))
-                    )}
-                  </View>
+                  <Text numberOfLines={1} style={styles.methodName}>{isUnlocked ? recruitmentMethod.name : 'LOCK'}</Text>
+                  <Text numberOfLines={2} style={styles.methodDescription}>{recruitmentMethod.description}</Text>
+                  <Image source={DRAW_IMAGES[method]} style={styles.drawImage} resizeMode="contain" />
+                  {isUnlocked ? (
+                    <Text style={styles.methodRange}>스탯 {recruitmentMethod.minStat}~{recruitmentMethod.maxStat}</Text>
+                  ) : (
+                    <View style={styles.lockTextContainer}>
+                      {unlockRequirements.map(requirement => (
+                        <Text key={requirement} numberOfLines={2} style={styles.lockRequirement}>{requirement}</Text>
+                      ))}
+                    </View>
+                  )}
                   <View style={styles.costPill}>
-                    <Text style={styles.costText}>
-                      {recruitmentMethod.isFree ? freeRecruitLabel : `● ${formatGold(recruitmentMethod.cost)}`}
-                    </Text>
+                    <Text style={styles.costText}>● {formatGold(recruitmentMethod.cost)}</Text>
                   </View>
                 </Pressable>
               );
             })}
+          </View>
+
+          <View style={styles.bottomRecruitActions}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={!isFreeRecruitAvailable || isRecruiting}
+              onPress={() => onRecruit('job-posting')}
+              style={({ pressed }) => [
+                styles.freeRecruitButton,
+                (!isFreeRecruitAvailable || isRecruiting || pressed) && styles.disabledButton,
+              ]}
+            >
+              <Text style={styles.freeRecruitButtonText}>{freeRecruitLabel}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={gold < RECRUITMENT_METHODS['open-recruitment'].cost * 9 || isRecruiting}
+              onPress={() => onRecruit('open-recruitment', 10)}
+              style={({ pressed }) => [
+                styles.tenRecruitButton,
+                (gold < RECRUITMENT_METHODS['open-recruitment'].cost * 9 || isRecruiting || pressed) && styles.disabledButton,
+              ]}
+            >
+              <Text style={styles.tenRecruitButtonTitle}>10회 공개 채용</Text>
+              <Text style={styles.tenRecruitButtonCost}>● {formatGold(RECRUITMENT_METHODS['open-recruitment'].cost * 9)} · 10% 할인</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -161,14 +203,7 @@ const Recruit = () => {
                 <Text style={styles.workValueLabel}>업무 기여도</Text>
                 <Text style={styles.workValueNumber}>{result.workValue}</Text>
               </View>
-              <View style={styles.statsGrid}>
-                {STAT_KEYS.map(statKey => (
-                  <View key={statKey} style={styles.statItem}>
-                    <Text style={styles.statLabel}>{EMPLOYEE_STAT_LABELS[statKey]}</Text>
-                    <Text style={styles.statValue}>{result.stats[statKey]}</Text>
-                  </View>
-                ))}
-              </View>
+              <EmployeeStatRadar stats={result.stats} size={210} />
             </View>
             <Text style={styles.gradeHint}>
               등급은 육각형 스탯의 가중 평균으로 결정됩니다. 모든 스탯이 100이면 SSS+입니다.
@@ -180,6 +215,55 @@ const Recruit = () => {
           </View>
         )}
       </ScrollView>
+
+      {recruitAnimationPhase === 'signature' ? (
+        <View style={styles.signatureOverlay}>
+          <LottieView
+            key={`signature-${recruitAnimationKey}`}
+            autoPlay
+            loop={false}
+            source={Assets.Lotties.SIGN}
+            style={styles.signatureLottie}
+            onAnimationFinish={() => setRecruitAnimationPhase('result')}
+          />
+        </View>
+      ) : null}
+
+      {recruitAnimationPhase === 'result' && result ? (
+        <View style={styles.resultOverlay}>
+          <View pointerEvents="none" style={styles.confettiLayer}>
+            <LottieView
+              key={`confetti-${recruitAnimationKey}`}
+              autoPlay
+              loop={false}
+              source={Assets.Lotties.CONFETTI}
+              style={styles.confettiLottie}
+            />
+          </View>
+          <Animation_View animation={AnimationType.FADE_IN} endTiming={400} style={styles.resultAnimationContainer}>
+            <View style={styles.resultRevealCard}>
+              <View style={[styles.gradeBadge, { backgroundColor: GRADE_COLORS[result.grade] }]}>
+                <Text style={styles.gradeText}>{result.grade}</Text>
+              </View>
+              {resultImage ? <Image source={resultImage} style={styles.revealCharacterImage} resizeMode="contain" /> : null}
+              <Text style={styles.revealName}>{result.name}</Text>
+              <Text style={styles.employeeJob}>{result.job}</Text>
+              <View style={styles.workValue}>
+                <Text style={styles.workValueLabel}>업무 기여도</Text>
+                <Text style={styles.workValueNumber}>{result.workValue}</Text>
+              </View>
+              <EmployeeStatRadar stats={result.stats} size={220} />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setRecruitAnimationPhase('idle')}
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>확인</Text>
+            </Pressable>
+          </Animation_View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 };
@@ -204,41 +288,40 @@ const styles = StyleSheet.create({
   recruitCard: {
     alignItems: 'center',
     marginTop: 20,
-    padding: 22,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#D7C6AF',
-    borderRadius: 24,
+    borderRadius: 18,
     backgroundColor: '#FFF9F0',
   },
-  silhouette: {
+  recruitHint: { color: '#554A40', fontSize: 16, fontWeight: '800' },
+  drawCardList: { flexDirection: 'row', width: '100%', gap: 8, marginTop: 14 },
+  drawCard: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    width: 152,
-    height: 152,
-    borderRadius: 76,
-    backgroundColor: '#5B5147',
+    minHeight: 250,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#D2C1AC',
+    borderRadius: 11,
+    backgroundColor: '#F4EFE6',
   },
-  questionMark: { color: '#FFF9F0', fontSize: 82, fontWeight: '800' },
-  recruitHint: { marginTop: 14, color: '#554A40', fontSize: 16, fontWeight: '700' },
-  methodList: { width: '100%', gap: 9, marginTop: 20 },
-  methodCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: '#354D70',
-  },
-  experiencedCard: { backgroundColor: '#7A5A99' },
-  headhuntingCard: { backgroundColor: '#8A5A26' },
-  methodTextContainer: { flex: 1 },
-  methodName: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  methodDescription: { marginTop: 3, color: '#E9E2D9', fontSize: 11, lineHeight: 16 },
-  methodRange: { marginTop: 5, color: '#FFE4A2', fontSize: 12, fontWeight: '700' },
-  lockRequirement: { marginTop: 4, color: '#FFE4A2', fontSize: 11, fontWeight: '700' },
-  costPill: { alignItems: 'center', justifyContent: 'center', minWidth: 80, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: '#FFF4DC' },
-  costText: { color: '#392B13', fontSize: 12, fontWeight: '900', textAlign: 'center' },
+  experiencedDrawCard: { backgroundColor: '#F1EEE9' },
+  headhuntingDrawCard: { borderColor: '#D6B16C', backgroundColor: '#F8ECD0' },
+  methodName: { width: '100%', color: '#342C25', fontSize: 13, fontWeight: '900', textAlign: 'center' },
+  methodDescription: { width: '100%', minHeight: 30, marginTop: 4, color: '#786C60', fontSize: 9, lineHeight: 13, textAlign: 'center' },
+  drawImage: { width: '100%', height: 118, marginVertical: 2 },
+  methodRange: { color: '#8D6628', fontSize: 9, fontWeight: '800', textAlign: 'center' },
+  lockTextContainer: { minHeight: 24, justifyContent: 'center' },
+  lockRequirement: { color: '#A44D3A', fontSize: 8, fontWeight: '800', lineHeight: 11, textAlign: 'center' },
+  costPill: { alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 7, paddingVertical: 7, borderRadius: 8, backgroundColor: '#D4B27A' },
+  costText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900', textAlign: 'center' },
+  bottomRecruitActions: { flexDirection: 'row', width: '100%', gap: 8, marginTop: 12 },
+  freeRecruitButton: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 50, borderWidth: 1, borderColor: '#9B8B76', borderRadius: 10, backgroundColor: '#F5F1E8' },
+  freeRecruitButtonText: { color: '#3B332B', fontSize: 13, fontWeight: '900' },
+  tenRecruitButton: { flex: 1.45, alignItems: 'center', justifyContent: 'center', minHeight: 50, borderWidth: 1, borderColor: '#A9782C', borderRadius: 10, backgroundColor: '#E5B953' },
+  tenRecruitButtonTitle: { color: '#392B13', fontSize: 14, fontWeight: '900' },
+  tenRecruitButtonCost: { marginTop: 2, color: '#674615', fontSize: 10, fontWeight: '700' },
   disabledButton: { opacity: 0.45 },
   resultSection: { marginTop: 28 },
   sectionTitle: { color: '#29231F', fontSize: 20, fontWeight: '800' },
@@ -278,16 +361,6 @@ const styles = StyleSheet.create({
   },
   workValueLabel: { color: '#62574C', fontSize: 13, fontWeight: '700' },
   workValueNumber: { color: '#9A6512', fontSize: 22, fontWeight: '900' },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', width: '100%', marginTop: 16, gap: 8 },
-  statItem: {
-    width: '31.5%',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#F7F0E5',
-  },
-  statLabel: { color: '#766B61', fontSize: 12 },
-  statValue: { marginTop: 2, color: '#29231F', fontSize: 18, fontWeight: '800' },
   gradeHint: { marginTop: 10, color: '#827568', fontSize: 12, lineHeight: 18, textAlign: 'center' },
   emptyResult: {
     marginTop: 28,
@@ -296,6 +369,57 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFE3D3',
   },
   emptyResultText: { color: '#766B61', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  signatureOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  signatureLottie: { width: 260, height: 260 },
+  resultOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    padding: 24,
+    backgroundColor: '#FFFDF8',
+  },
+  confettiLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 1 },
+  confettiLottie: { width: '100%', height: '100%' },
+  resultAnimationContainer: { alignItems: 'center', width: '100%', zIndex: 2 },
+  resultRevealCard: {
+    position: 'relative',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 360,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#D7C6AF',
+    borderRadius: 24,
+    backgroundColor: '#FFF9F0',
+  },
+  revealCharacterImage: { width: 174, height: 174 },
+  revealName: { color: '#29231F', fontSize: 27, fontWeight: '800' },
+  confirmButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 360,
+    height: 52,
+    marginTop: 14,
+    borderRadius: 14,
+    backgroundColor: '#354D70',
+  },
+  confirmButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
 });
 
 export default Recruit;
