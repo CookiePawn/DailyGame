@@ -172,3 +172,100 @@ type PlayerState = {
 5. 채용과 결과 화면을 구현한다.
 6. 홈과 직원 화면을 연결하고 실제 플레이 흐름을 검증한다.
 7. 검증 결과에 따라 채용 연출, 10연차, 추가 능력치와 부가 콘텐츠를 확장한다.
+
+---
+
+## 프롬프트
+
+**캐릭터 생성**
+```
+Use case: stylized-concept
+Asset type: square employee portrait art for a casual mobile idle gacha game
+
+Create a single Korean junior software developer character for a casual mobile idle gacha game.
+
+Subject:
+A friendly Korean man in his mid-20s with short, neat black hair and round glasses. He wears a dark navy zip-up hoodie over a simple light beige T-shirt. He is holding an open laptop toward the viewer with both hands. The laptop screen displays a simple generic coding interface made of colorful abstract UI blocks and syntax-colored lines only, with absolutely no readable text, letters, numbers, logos, or symbols.
+
+Style:
+Premium Korean casual mobile game character illustration.
+Cute office worker collectible character.
+High-quality 2D illustration.
+Warm and approachable.
+Soft cel shading.
+Clean, crisp line art.
+Rounded shapes.
+Slightly chibi proportions while maintaining a believable young adult appearance.
+Large expressive eyes.
+Small nose and mouth.
+Friendly facial expression.
+Modern Korean idle RPG / tycoon / management game character style.
+Consistent with collectible employee portraits found in casual mobile games.
+
+Composition:
+1:1 square image.
+Single character only.
+Waist-up portrait.
+Upper body completely visible.
+Laptop completely visible.
+Character centered.
+Character occupies approximately 60–70% of the canvas.
+Comfortable empty margin around the character.
+Large head-to-body ratio.
+Facing forward with a subtle three-quarter angle.
+Designed to fit naturally inside a collectible character card.
+
+Expression:
+Gentle smile.
+Quiet confidence.
+Friendly.
+Enthusiastic.
+Professional but approachable.
+Presenting the laptop naturally toward the viewer.
+
+Color palette:
+Warm cream.
+Dark navy.
+Charcoal.
+Muted beige.
+Soft blue accents.
+Warm, cozy color harmony.
+
+Rendering:
+Smooth professional mobile game rendering.
+Soft highlights.
+Subtle ambient lighting.
+Minimal texture.
+Clean silhouette.
+High readability at small icon size.
+Premium illustration quality.
+
+Background:
+Perfectly flat solid #00FF00 chroma-key background.
+No gradient.
+No shadow.
+No reflections.
+No floor.
+No environmental objects.
+No particles.
+No decorations.
+
+Constraints:
+Single character only.
+No text.
+No letters.
+No numbers.
+No readable code.
+No logos.
+No watermark.
+No signature.
+No border.
+No frame.
+No UI.
+No speech bubble.
+No accessories floating around the character.
+No additional objects except the laptop.
+Keep the entire upper body and laptop fully inside the frame.
+Do not crop the head, shoulders, arms, or laptop.
+Do not use #00FF00 anywhere in the character, clothing, laptop, or screen.
+```
