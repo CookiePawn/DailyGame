@@ -178,106 +178,44 @@ type PlayerState = {
 ## 프롬프트
 
 **캐릭터 생성**
+
+![Character EX](./docs/character_ex.png)
 ```
 Use case: stylized-concept
-Asset type: square employee portrait illustration for a Korean casual mobile idle management game
+Asset type: square employee portrait for a Korean casual mobile idle management game
 
-Create a single Korean junior software developer character.
+Input image:
+Use the attached image only as a style reference.
+Match its character design language: warm beige card-game mood, clean dark outlines, soft shading, rounded facial features, compact cute proportions, friendly Korean office-worker characters, and polished 2D mobile-game illustration quality.
+Do not copy any existing character, pose, clothing, or composition from the reference image.
+
+Primary request:
+Create one new employee character: a Korean junior software developer.
 
 Subject:
-A friendly Korean man in his mid-20s.
-Short, neat black hair.
-Round black glasses.
-Dark navy zip-up hoodie over a simple light beige T-shirt.
-Holding an open laptop toward the viewer with both hands.
-The laptop screen shows a generic coding interface using colorful abstract UI blocks and syntax-colored lines only. No readable text, letters, numbers, logos, symbols, or recognizable programming language.
-
-Style:
-Premium Korean casual mobile game illustration.
-Cute collectible office employee.
-Warm, friendly, approachable.
-Soft cel shading.
-Clean and polished line art.
-Rounded shapes.
-Slightly chibi proportions.
-Large expressive eyes.
-Small nose and mouth.
-Young adult appearance.
-Simple but premium rendering.
-High readability at small sizes.
-Korean mobile idle tycoon game character style.
-Corporate simulation game NPC portrait.
-Collectible employee card illustration.
-Consistent visual style suitable for a roster of office employees.
+A friendly Korean man in his mid-20s with short, slightly tousled black hair.
+He wears a dark charcoal hoodie over a light beige T-shirt.
+He holds an open gray laptop naturally in front of his body with both hands.
+The laptop screen contains only abstract colored lines and blocks, with no readable content.
 
 Composition:
-Square 1:1 aspect ratio.
+1:1 square image.
 Single character only.
-Waist-up portrait.
-Entire upper body fully visible.
-Laptop fully visible.
-Character centered.
-Character fills approximately 65% of the canvas.
-Comfortable empty margin on every side.
-Large head-to-body ratio.
-Facing slightly three-quarter toward the viewer.
-Natural relaxed posture.
-Designed to fit inside a collectible employee card.
+Waist-up employee portrait.
+Character centered, facing slightly three-quarter toward the viewer.
+Keep the head, shoulders, arms, hands, and entire laptop fully inside the frame.
+Use comfortable empty margin around the character.
+No employee card frame or UI.
 
 Expression:
-Gentle smile.
-Quiet confidence.
-Friendly.
-Enthusiastic.
-Professional.
-Approachable.
-Presenting the laptop naturally.
-
-Color palette:
-Warm cream.
-Dark navy.
-Charcoal gray.
-Muted beige.
-Subtle desaturated blue accents.
-Soft warm lighting.
-
-Rendering:
-Premium 2D mobile game artwork.
-Soft cel shading.
-Minimal texture.
-Smooth color transitions.
-Clean silhouette.
-Simple clothing folds.
-No exaggerated rendering.
-High-quality Korean game illustration.
+Gentle smile, quiet confidence, approachable and enthusiastic.
 
 Background:
-Perfectly flat solid #00FF00 chroma-key background.
-Pure #00FF00 only.
-No gradient.
-No shadow.
-No reflections.
-No floor.
-No environment.
-No decorations.
-No particles.
+Perfectly flat solid #00FF00 chroma-key background for later removal.
+No shadow, floor, environment, decoration, gradient, reflection, text, or particles.
 
 Constraints:
-Single character only.
-No text.
-No letters.
-No numbers.
-No readable code.
-No logos.
-No watermark.
-No signature.
-No frame.
-No border.
-No UI.
-No speech bubbles.
-No floating accessories.
-No additional objects except the laptop.
-Keep the entire upper body and laptop fully inside the frame.
-Do not crop the head, shoulders, arms, hands, or laptop.
-Do not use #00FF00 anywhere in the character, clothing, laptop, or screen.
+Preserve the reference image's overall illustration style only.
+No text, letters, numbers, logos, watermark, signature, or border.
+Do not use #00FF00 in the character, clothing, or laptop.
 ```
