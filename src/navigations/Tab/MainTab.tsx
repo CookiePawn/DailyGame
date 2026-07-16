@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
-import { Home } from '@/screens';
+import { Home, Recruit } from '@/screens';
 import { TabBar } from '@/components';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -16,6 +16,9 @@ export const MainTab = () => {
     >
       <Tab.Screen name="Home" component={Home} options={{
         tabBarLabel: '홈',
+      }}/>
+      <Tab.Screen name="Recruit" component={Recruit} options={{
+        tabBarLabel: '채용',
       }}/>
     </Tab.Navigator>
   );
