@@ -1,5 +1,5 @@
 # 채용왕 (Project Codename)
-
+ 
 > **좋은 직원을 뽑고 장착해, 더 많은 채용 자금을 만드는 현실 회사 테마 방치형 뽑기 게임**
 
 ![Concept UI](./docs/image_01.png)
