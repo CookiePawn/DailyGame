@@ -2,13 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, AppState, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAtom, useSetAtom } from 'jotai';
 import { Assets } from '@/assets';
+import { getCompanyStage } from '@/constants';
 import {
   collectPassiveIncomeAtom,
+  companyStageAtom,
   employeesAtom,
   equippedEmployeeIdsAtom,
+  expandCompanyAtom,
   goldAtom,
   incomePerSecondAtom,
+  maxTeamSizeAtom,
   PassiveIncomeResult,
+  teamSynergyAtom,
+  totalEarnedGoldAtom,
 } from '@/lib/jotai';
 import { Employee } from '@/models';
 
@@ -35,11 +41,17 @@ const Home = () => {
   const [employees] = useAtom(employeesAtom);
   const [equippedEmployeeIds] = useAtom(equippedEmployeeIdsAtom);
   const [incomePerSecond] = useAtom(incomePerSecondAtom);
+  const [teamSynergy] = useAtom(teamSynergyAtom);
+  const [companyStage] = useAtom(companyStageAtom);
+  const [maxTeamSize] = useAtom(maxTeamSizeAtom);
+  const [totalEarnedGold] = useAtom(totalEarnedGoldAtom);
   const collectPassiveIncome = useSetAtom(collectPassiveIncomeAtom);
+  const expandCompany = useSetAtom(expandCompanyAtom);
   const isCollectingRef = useRef(false);
   const appStateRef = useRef(AppState.currentState);
   const workPulse = useRef(new Animated.Value(0.5)).current;
   const [passiveReward, setPassiveReward] = useState<PassiveIncomeResult | null>(null);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   const equippedEmployees = useMemo(
     () => equippedEmployeeIds
@@ -91,6 +103,22 @@ const Home = () => {
   }, [workPulse]);
 
   const isWorking = equippedEmployees.length > 0;
+  const nextCompanyStage = getCompanyStage(companyStage.level + 1);
+  const hasNextCompanyStage = nextCompanyStage.level !== companyStage.level;
+  const meetsCompanyRequirements = hasNextCompanyStage &&
+    totalEarnedGold >= nextCompanyStage.requiredTotalEarnedGold &&
+    employees.length >= nextCompanyStage.requiredEmployeeCount;
+  const canExpandCompany = meetsCompanyRequirements && gold >= nextCompanyStage.expansionCost;
+
+  const onExpandCompany = async () => {
+    if (!canExpandCompany || isExpanding) return;
+    setIsExpanding(true);
+    try {
+      await expandCompany();
+    } finally {
+      setIsExpanding(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -137,6 +165,34 @@ const Home = () => {
           </View>
         </View>
 
+        <View style={styles.companyCard}>
+          <View style={styles.companyHeader}>
+            <View>
+              <Text style={styles.companyEyebrow}>회사 규모</Text>
+              <Text style={styles.companyTitle}>{companyStage.name}</Text>
+            </View>
+            <Text style={styles.companyLevel}>Lv.{companyStage.level}</Text>
+          </View>
+          <Text style={styles.companyBenefit}>프로젝트 수익 +{Math.round(companyStage.incomeBonus * 100)}% · 최대 {maxTeamSize}명 편성</Text>
+          {hasNextCompanyStage ? (
+            <>
+              <View style={styles.companyDivider} />
+              <Text style={styles.nextCompanyTitle}>다음: {nextCompanyStage.name}</Text>
+              <Text style={styles.companyRequirement}>누적 수익 {formatGold(totalEarnedGold)} / {formatGold(nextCompanyStage.requiredTotalEarnedGold)}</Text>
+              <Text style={styles.companyRequirement}>보유 직원 {employees.length} / {nextCompanyStage.requiredEmployeeCount}명</Text>
+              <Text style={styles.companyCost}>확장 비용 {formatGold(nextCompanyStage.expansionCost)} 골드</Text>
+              <Pressable
+                accessibilityRole="button"
+                disabled={!canExpandCompany || isExpanding}
+                onPress={() => void onExpandCompany()}
+                style={[styles.companyExpandButton, (!canExpandCompany || isExpanding) && styles.companyExpandButtonDisabled]}
+              >
+                <Text style={styles.companyExpandButtonText}>{canExpandCompany ? '회사 확장' : meetsCompanyRequirements ? '골드가 부족합니다' : '확장 조건을 달성하세요'}</Text>
+              </Pressable>
+            </>
+          ) : <Text style={styles.companyComplete}>최고 단계의 회사입니다.</Text>}
+        </View>
+
         <View style={styles.projectCard}>
           <View style={styles.projectHeader}>
             <View>
@@ -154,6 +210,13 @@ const Home = () => {
               ? '장착한 직원들이 각자의 역량으로 프로젝트를 진행하고 있어요.'
               : '직원 관리에서 프로젝트에 투입할 직원을 최대 3명 장착하세요.'}
           </Text>
+
+          {teamSynergy ? (
+            <View style={styles.synergyBadge}>
+              <Text style={styles.synergyName}>{teamSynergy.name} +{Math.round((teamSynergy.multiplier - 1) * 100)}%</Text>
+              <Text style={styles.synergyDescription}>{teamSynergy.description}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.teamArea}>
             {equippedEmployees.length > 0 ? equippedEmployees.map(employee => {
@@ -200,6 +263,20 @@ const styles = StyleSheet.create({
   incomeUnit: { fontSize: 14 },
   incomeBarTrack: { height: 6, marginTop: 14, overflow: 'hidden', borderRadius: 4, backgroundColor: '#D2D9EB' },
   incomeBarFill: { height: '100%', minWidth: 4, borderRadius: 4, backgroundColor: '#6479D7' },
+  companyCard: { marginTop: 18, padding: 17, borderWidth: 1, borderColor: '#DDE1F0', borderRadius: 18, backgroundColor: '#FFFFFF' },
+  companyHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  companyEyebrow: { color: '#6F7892', fontSize: 11, fontWeight: '800' },
+  companyTitle: { marginTop: 3, color: '#222B48', fontSize: 19, fontWeight: '900' },
+  companyLevel: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, color: '#FFFFFF', fontSize: 12, fontWeight: '900', backgroundColor: '#596ED5' },
+  companyBenefit: { marginTop: 8, color: '#59647D', fontSize: 12, fontWeight: '700' },
+  companyDivider: { height: 1, marginVertical: 13, backgroundColor: '#E9EBF3' },
+  nextCompanyTitle: { color: '#35405E', fontSize: 13, fontWeight: '900' },
+  companyRequirement: { marginTop: 5, color: '#737D95', fontSize: 11, fontWeight: '700' },
+  companyCost: { marginTop: 7, color: '#A46A18', fontSize: 12, fontWeight: '900' },
+  companyExpandButton: { alignItems: 'center', marginTop: 12, paddingVertical: 11, borderRadius: 11, backgroundColor: '#596ED5' },
+  companyExpandButtonDisabled: { backgroundColor: '#C9CEDD' },
+  companyExpandButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
+  companyComplete: { marginTop: 12, color: '#5D6CCC', fontSize: 12, fontWeight: '900' },
   projectCard: { marginTop: 18, padding: 18, borderRadius: 22, backgroundColor: '#202A48' },
   projectHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   projectEyebrow: { color: '#ABB8DB', fontSize: 11, fontWeight: '800' },
@@ -208,6 +285,9 @@ const styles = StyleSheet.create({
   workStatusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#6BE1A4' },
   workStatusText: { color: '#D9E1F9', fontSize: 10, fontWeight: '700' },
   projectDescription: { marginTop: 10, color: '#C7D0EB', fontSize: 12, lineHeight: 18 },
+  synergyBadge: { marginTop: 12, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, backgroundColor: '#46568B' },
+  synergyName: { color: '#8DEABC', fontSize: 12, fontWeight: '900' },
+  synergyDescription: { marginTop: 2, color: '#D3DCF7', fontSize: 10, fontWeight: '700' },
   teamArea: { marginTop: 16, gap: 8 },
   workerCard: { position: 'relative', flexDirection: 'row', alignItems: 'center', overflow: 'hidden', minHeight: 64, paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#303C60' },
   workerImage: { width: 54, height: 58 },

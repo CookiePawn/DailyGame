@@ -17,6 +17,8 @@ import {
   equippedEmployeeIdsAtom,
   goldAtom,
   incomePerSecondAtom,
+  maxTeamSizeAtom,
+  teamSynergyAtom,
   toggleEquippedEmployeeAtom,
 } from '@/lib/jotai';
 import { Employee } from '@/models';
@@ -97,6 +99,8 @@ const Employees = () => {
   const [employees] = useAtom(employeesAtom);
   const [equippedEmployeeIds] = useAtom(equippedEmployeeIdsAtom);
   const [incomePerSecond] = useAtom(incomePerSecondAtom);
+  const [teamSynergy] = useAtom(teamSynergyAtom);
+  const [maxTeamSize] = useAtom(maxTeamSizeAtom);
   const toggleEquippedEmployee = useSetAtom(toggleEquippedEmployeeAtom);
   const [sortMode, setSortMode] = useState<SortMode>('grade');
   const [updatingEmployeeId, setUpdatingEmployeeId] = useState<string | null>(null);
@@ -151,6 +155,7 @@ const Employees = () => {
               <Text style={styles.projectMetric}>예상 기간 06:00:00</Text>
               <Text style={styles.projectMetric}>성공률 <Text style={styles.projectSuccess}>{projectSuccessRate}%</Text></Text>
               <Text style={styles.projectMetric}>수익 +{incomePerSecond}/초</Text>
+              {teamSynergy ? <Text style={styles.projectSynergy}>{teamSynergy.name} +{Math.round((teamSynergy.multiplier - 1) * 100)}%</Text> : null}
             </View>
           </View>
         </View>
@@ -158,7 +163,7 @@ const Employees = () => {
         <View style={styles.teamHeader}>
           <View style={styles.teamTitleRow}>
             <Text style={styles.teamTitle}>현재 팀</Text>
-            <Text style={styles.teamCount}>({equippedEmployees.length}/3)</Text>
+            <Text style={styles.teamCount}>({equippedEmployees.length}/{maxTeamSize})</Text>
           </View>
           <Text style={styles.teamGuide}>프로젝트에 투입할 직원을 선택하세요.</Text>
         </View>
@@ -174,7 +179,7 @@ const Employees = () => {
               onRemove={onToggle}
             />
           ))}
-          {Array.from({ length: 3 - equippedEmployees.length }).map((_, index) => (
+          {Array.from({ length: maxTeamSize - equippedEmployees.length }).map((_, index) => (
             <View key={`empty-team-${index}`} style={styles.emptyTeamCard}>
               <Text style={styles.emptyTeamPlus}>+</Text>
               <Text style={styles.emptyTeamText}>직원 선택</Text>
@@ -257,12 +262,13 @@ const styles = StyleSheet.create({
   projectMetrics: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 9 },
   projectMetric: { color: '#7A839A', fontSize: 10, fontWeight: '700' },
   projectSuccess: { color: '#7163E8', fontWeight: '900' },
+  projectSynergy: { color: '#5D50D5', fontSize: 10, fontWeight: '900' },
   teamHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 21 },
   teamTitleRow: { flexDirection: 'row', alignItems: 'baseline' },
   teamTitle: { color: '#202A47', fontSize: 18, fontWeight: '900' },
   teamCount: { marginLeft: 4, color: '#65708B', fontSize: 15, fontWeight: '800' },
   teamGuide: { color: '#7F879B', fontSize: 10, fontWeight: '600' },
-  teamList: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 13 },
+  teamList: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, marginTop: 13 },
   teamMemberCard: { position: 'relative', width: '31.8%', overflow: 'hidden', minHeight: 174, borderWidth: 1, borderColor: '#E1E4ED', borderRadius: 8, backgroundColor: '#FFFFFF' },
   teamMemberContent: { alignItems: 'center', paddingTop: 25, paddingHorizontal: 7 },
   slotBadge: { position: 'absolute', top: 0, left: 0, zIndex: 1, alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderBottomRightRadius: 8, backgroundColor: '#7163E8' },

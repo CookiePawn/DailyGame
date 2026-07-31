@@ -9,6 +9,7 @@ type PlayerRow = {
   total_recruit_count: number;
   last_free_recruit_at: number | null;
   last_income_at: number | null;
+  company_level: number;
 };
 
 type EmployeeRow = {
@@ -33,6 +34,7 @@ export type PlayerSnapshot = {
   totalRecruitCount: number;
   lastFreeRecruitAt: number | null;
   lastIncomeAt: number | null;
+  companyLevel: number;
   employees: Employee[];
   equippedEmployeeIds: string[];
 };
@@ -79,7 +81,8 @@ const initializeDatabase = async () => {
           total_earned_gold INTEGER NOT NULL,
           total_recruit_count INTEGER NOT NULL,
           last_free_recruit_at INTEGER,
-          last_income_at INTEGER
+          last_income_at INTEGER,
+          company_level INTEGER NOT NULL DEFAULT 1
         )`,
       ],
       [
@@ -108,13 +111,16 @@ const initializeDatabase = async () => {
     ]);
 
     const columnsResult = await db.execute('PRAGMA table_info(player_state)');
-    const hasLastIncomeAt = columnsResult.rows.some(column => column.name === 'last_income_at');
-    if (!hasLastIncomeAt) {
+    const columnNames = columnsResult.rows.map(column => String(column.name));
+    if (!columnNames.includes('last_income_at')) {
       await db.execute('ALTER TABLE player_state ADD COLUMN last_income_at INTEGER');
+    }
+    if (!columnNames.includes('company_level')) {
+      await db.execute('ALTER TABLE player_state ADD COLUMN company_level INTEGER NOT NULL DEFAULT 1');
     }
 
     await db.execute(
-      'INSERT OR IGNORE INTO player_state (id, gold, total_earned_gold, total_recruit_count, last_free_recruit_at, last_income_at) VALUES (1, 10000, 0, 0, NULL, NULL)',
+      'INSERT OR IGNORE INTO player_state (id, gold, total_earned_gold, total_recruit_count, last_free_recruit_at, last_income_at, company_level) VALUES (1, 10000, 0, 0, NULL, NULL, 1)',
     );
   })();
 
@@ -126,7 +132,7 @@ export const playerDatabase = {
     await initializeDatabase();
     const db = getDatabase();
     const [playerResult, employeeResult, equippedResult] = await Promise.all([
-      db.execute('SELECT gold, total_earned_gold, total_recruit_count, last_free_recruit_at, last_income_at FROM player_state WHERE id = 1'),
+      db.execute('SELECT gold, total_earned_gold, total_recruit_count, last_free_recruit_at, last_income_at, company_level FROM player_state WHERE id = 1'),
       db.execute('SELECT * FROM employees ORDER BY recruited_at DESC'),
       db.execute('SELECT employee_id FROM equipped_employees ORDER BY slot ASC'),
     ]);
@@ -142,6 +148,7 @@ export const playerDatabase = {
       totalRecruitCount: player.total_recruit_count,
       lastFreeRecruitAt: player.last_free_recruit_at,
       lastIncomeAt: player.last_income_at,
+      companyLevel: player.company_level,
       employees: employeeResult.rows.map(row => mapEmployee(row as EmployeeRow)),
       equippedEmployeeIds: equippedResult.rows.map(row => String(row.employee_id)),
     };
@@ -212,5 +219,13 @@ export const playerDatabase = {
         );
       }
     });
+  },
+
+  async saveCompanyExpansion({ gold, companyLevel }: Pick<PlayerSnapshot, 'gold' | 'companyLevel'>): Promise<void> {
+    await initializeDatabase();
+    await getDatabase().execute(
+      'UPDATE player_state SET gold = ?, company_level = ? WHERE id = 1',
+      [gold, companyLevel],
+    );
   },
 };
