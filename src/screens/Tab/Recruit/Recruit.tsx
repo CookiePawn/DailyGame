@@ -78,6 +78,7 @@ const Recruit = () => {
   );
   const freeRecruitLabel = getFreeRecruitLabel(lastFreeRecruitAt, now);
   const isFreeRecruitAvailable = freeRecruitLabel === '무료 채용';
+  const signatureColor = result ? GRADE_COLORS[result.grade] : '#0080FF';
 
   const onRecruit = async (method: RecruitmentMethod, count = 1) => {
     if (isRecruiting) return;
@@ -224,6 +225,7 @@ const Recruit = () => {
             loop={false}
             source={Assets.Lotties.SIGN}
             style={styles.signatureLottie}
+            colorFilters={[{ keypath: 'surface2557', color: signatureColor }]}
             onAnimationFinish={() => setRecruitAnimationPhase('result')}
           />
         </View>
