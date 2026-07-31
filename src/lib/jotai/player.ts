@@ -9,7 +9,25 @@ export const employeesAtom = atom<Employee[]>([]);
 export const totalRecruitCountAtom = atom(0);
 export const lastFreeRecruitAtAtom = atom<number | null>(null);
 export const totalEarnedGoldAtom = atom(0);
+export const equippedEmployeeIdsAtom = atom<string[]>([]);
+export const lastIncomeAtAtom = atom<number | null>(null);
 export const isPlayerHydratedAtom = atom(false);
+
+export type PassiveIncomeResult = {
+  amount: number;
+  elapsedSeconds: number;
+};
+
+export const incomePerSecondAtom = atom(get => {
+  const employees = get(employeesAtom);
+  const equippedEmployeeIds = get(equippedEmployeeIdsAtom);
+  const totalWorkValue = equippedEmployeeIds.reduce((total, employeeId) => {
+    const employee = employees.find(item => item.id === employeeId);
+    return total + (employee?.workValue ?? 0);
+  }, 0);
+
+  return Math.floor(totalWorkValue / 10);
+});
 
 export const hydratePlayerAtom = atom(null, async (_get, set) => {
   try {
@@ -19,6 +37,8 @@ export const hydratePlayerAtom = atom(null, async (_get, set) => {
     set(totalRecruitCountAtom, snapshot.totalRecruitCount);
     set(totalEarnedGoldAtom, snapshot.totalEarnedGold);
     set(lastFreeRecruitAtAtom, snapshot.lastFreeRecruitAt);
+    set(equippedEmployeeIdsAtom, snapshot.equippedEmployeeIds);
+    set(lastIncomeAtAtom, snapshot.lastIncomeAt ?? Date.now());
   } catch (error) {
     console.error('플레이어 데이터를 불러오지 못했습니다.', error);
   } finally {
@@ -31,9 +51,59 @@ export const earnGoldAtom = atom(null, async (get, set, amount: number) => {
 
   const gold = get(goldAtom) + amount;
   const totalEarnedGold = get(totalEarnedGoldAtom) + amount;
-  await playerDatabase.saveGold({ gold, totalEarnedGold });
+  await playerDatabase.saveGold({
+    gold,
+    totalEarnedGold,
+    lastIncomeAt: get(lastIncomeAtAtom),
+  });
   set(goldAtom, gold);
   set(totalEarnedGoldAtom, totalEarnedGold);
+});
+
+export const collectPassiveIncomeAtom = atom<null, [now?: number], Promise<PassiveIncomeResult>>(
+  null,
+  async (get, set, now = Date.now()) => {
+    const lastIncomeAt = get(lastIncomeAtAtom);
+    if (lastIncomeAt === null) {
+      set(lastIncomeAtAtom, now);
+      await playerDatabase.saveGold({
+        gold: get(goldAtom),
+        totalEarnedGold: get(totalEarnedGoldAtom),
+        lastIncomeAt: now,
+      });
+      return { amount: 0, elapsedSeconds: 0 };
+    }
+
+    const elapsedSeconds = Math.floor((now - lastIncomeAt) / 1000);
+    if (elapsedSeconds <= 0) return { amount: 0, elapsedSeconds: 0 };
+
+    const nextIncomeAt = lastIncomeAt + elapsedSeconds * 1000;
+    const amount = get(incomePerSecondAtom) * elapsedSeconds;
+    const gold = get(goldAtom) + amount;
+    const totalEarnedGold = get(totalEarnedGoldAtom) + amount;
+
+    await playerDatabase.saveGold({ gold, totalEarnedGold, lastIncomeAt: nextIncomeAt });
+    set(lastIncomeAtAtom, nextIncomeAt);
+    set(goldAtom, gold);
+    set(totalEarnedGoldAtom, totalEarnedGold);
+    return { amount, elapsedSeconds };
+  },
+);
+
+export const toggleEquippedEmployeeAtom = atom(null, async (get, set, employeeId: string) => {
+  const equippedEmployeeIds = get(equippedEmployeeIdsAtom);
+  const employeeIndex = equippedEmployeeIds.indexOf(employeeId);
+  const nextEquippedEmployeeIds = employeeIndex >= 0
+    ? equippedEmployeeIds.filter(id => id !== employeeId)
+    : equippedEmployeeIds.length < 3
+      ? [...equippedEmployeeIds, employeeId]
+      : null;
+
+  if (nextEquippedEmployeeIds === null) return false;
+
+  await playerDatabase.saveEquippedEmployeeIds(nextEquippedEmployeeIds);
+  set(equippedEmployeeIdsAtom, nextEquippedEmployeeIds);
+  return true;
 });
 
 export type RecruitRequest = {

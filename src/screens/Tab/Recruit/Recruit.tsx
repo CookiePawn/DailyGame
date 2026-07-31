@@ -25,7 +25,7 @@ import {
   totalEarnedGoldAtom,
   totalRecruitCountAtom,
 } from '@/lib/jotai';
-import { AnimationType, Employee, RecruitmentMethod } from '@/models';
+import { AnimationType, Employee, EmployeeGrade, RecruitmentMethod } from '@/models';
 
 type PaidRecruitmentMethod = Exclude<RecruitmentMethod, 'job-posting'>;
 type RecruitAnimationPhase = 'idle' | 'signature' | 'reveal' | 'summary';
@@ -43,6 +43,17 @@ const DRAW_IMAGES: Record<PaidRecruitmentMethod, number> = {
 };
 
 const formatGold = (value: number) => value.toLocaleString('ko-KR');
+
+const GRADE_ORDER: Record<EmployeeGrade, number> = {
+  D: 0,
+  C: 1,
+  B: 2,
+  A: 3,
+  S: 4,
+  SS: 5,
+  SSS: 6,
+  'SSS+': 7,
+};
 
 const getFreeRecruitLabel = (lastFreeRecruitAt: number | null, now: number) => {
   if (lastFreeRecruitAt === null) return '무료 채용';
@@ -80,7 +91,14 @@ const Recruit = () => {
   );
   const freeRecruitLabel = getFreeRecruitLabel(lastFreeRecruitAt, now);
   const isFreeRecruitAvailable = freeRecruitLabel === '무료 채용';
-  const signatureColor = currentResult ? GRADE_COLORS[currentResult.grade] : '#0080FF';
+  const highestResult = useMemo(
+    () => recruitResults.reduce<Employee | null>((highest, employee) => {
+      if (!highest || GRADE_ORDER[employee.grade] > GRADE_ORDER[highest.grade]) return employee;
+      return highest;
+    }, null),
+    [recruitResults],
+  );
+  const signatureColor = highestResult ? GRADE_COLORS[highestResult.grade] : '#0080FF';
 
   const onRecruit = async (method: RecruitmentMethod, count = 1) => {
     if (isRecruiting) return;

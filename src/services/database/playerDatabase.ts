@@ -8,6 +8,7 @@ type PlayerRow = {
   total_earned_gold: number;
   total_recruit_count: number;
   last_free_recruit_at: number | null;
+  last_income_at: number | null;
 };
 
 type EmployeeRow = {
@@ -31,7 +32,9 @@ export type PlayerSnapshot = {
   totalEarnedGold: number;
   totalRecruitCount: number;
   lastFreeRecruitAt: number | null;
+  lastIncomeAt: number | null;
   employees: Employee[];
+  equippedEmployeeIds: string[];
 };
 
 let database: DB | null = null;
@@ -75,7 +78,8 @@ const initializeDatabase = async () => {
           gold INTEGER NOT NULL,
           total_earned_gold INTEGER NOT NULL,
           total_recruit_count INTEGER NOT NULL,
-          last_free_recruit_at INTEGER
+          last_free_recruit_at INTEGER,
+          last_income_at INTEGER
         )`,
       ],
       [
@@ -96,9 +100,22 @@ const initializeDatabase = async () => {
         )`,
       ],
       [
-        'INSERT OR IGNORE INTO player_state (id, gold, total_earned_gold, total_recruit_count, last_free_recruit_at) VALUES (1, 10000, 0, 0, NULL)',
+        `CREATE TABLE IF NOT EXISTS equipped_employees (
+          slot INTEGER PRIMARY KEY NOT NULL,
+          employee_id TEXT UNIQUE NOT NULL
+        )`,
       ],
     ]);
+
+    const columnsResult = await db.execute('PRAGMA table_info(player_state)');
+    const hasLastIncomeAt = columnsResult.rows.some(column => column.name === 'last_income_at');
+    if (!hasLastIncomeAt) {
+      await db.execute('ALTER TABLE player_state ADD COLUMN last_income_at INTEGER');
+    }
+
+    await db.execute(
+      'INSERT OR IGNORE INTO player_state (id, gold, total_earned_gold, total_recruit_count, last_free_recruit_at, last_income_at) VALUES (1, 10000, 0, 0, NULL, NULL)',
+    );
   })();
 
   return initialization;
@@ -108,9 +125,10 @@ export const playerDatabase = {
   async load(): Promise<PlayerSnapshot> {
     await initializeDatabase();
     const db = getDatabase();
-    const [playerResult, employeeResult] = await Promise.all([
-      db.execute('SELECT gold, total_earned_gold, total_recruit_count, last_free_recruit_at FROM player_state WHERE id = 1'),
+    const [playerResult, employeeResult, equippedResult] = await Promise.all([
+      db.execute('SELECT gold, total_earned_gold, total_recruit_count, last_free_recruit_at, last_income_at FROM player_state WHERE id = 1'),
       db.execute('SELECT * FROM employees ORDER BY recruited_at DESC'),
+      db.execute('SELECT employee_id FROM equipped_employees ORDER BY slot ASC'),
     ]);
     const player = playerResult.rows[0] as PlayerRow | undefined;
 
@@ -123,7 +141,9 @@ export const playerDatabase = {
       totalEarnedGold: player.total_earned_gold,
       totalRecruitCount: player.total_recruit_count,
       lastFreeRecruitAt: player.last_free_recruit_at,
+      lastIncomeAt: player.last_income_at,
       employees: employeeResult.rows.map(row => mapEmployee(row as EmployeeRow)),
+      equippedEmployeeIds: equippedResult.rows.map(row => String(row.employee_id)),
     };
   },
 
@@ -167,11 +187,30 @@ export const playerDatabase = {
     });
   },
 
-  async saveGold({ gold, totalEarnedGold }: Pick<PlayerSnapshot, 'gold' | 'totalEarnedGold'>): Promise<void> {
+  async saveGold({
+    gold,
+    totalEarnedGold,
+    lastIncomeAt,
+  }: Pick<PlayerSnapshot, 'gold' | 'totalEarnedGold' | 'lastIncomeAt'>): Promise<void> {
     await initializeDatabase();
     await getDatabase().execute(
-      'UPDATE player_state SET gold = ?, total_earned_gold = ? WHERE id = 1',
-      [gold, totalEarnedGold],
+      'UPDATE player_state SET gold = ?, total_earned_gold = ?, last_income_at = ? WHERE id = 1',
+      [gold, totalEarnedGold, lastIncomeAt],
     );
+  },
+
+  async saveEquippedEmployeeIds(equippedEmployeeIds: string[]): Promise<void> {
+    await initializeDatabase();
+    const db = getDatabase();
+
+    await db.transaction(async transaction => {
+      await transaction.execute('DELETE FROM equipped_employees');
+      for (const [slot, employeeId] of equippedEmployeeIds.entries()) {
+        await transaction.execute(
+          'INSERT INTO equipped_employees (slot, employee_id) VALUES (?, ?)',
+          [slot, employeeId],
+        );
+      }
+    });
   },
 };
