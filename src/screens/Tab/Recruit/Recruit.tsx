@@ -28,7 +28,7 @@ import {
 import { AnimationType, Employee, RecruitmentMethod } from '@/models';
 
 type PaidRecruitmentMethod = Exclude<RecruitmentMethod, 'job-posting'>;
-type RecruitAnimationPhase = 'idle' | 'signature' | 'result';
+type RecruitAnimationPhase = 'idle' | 'signature' | 'reveal' | 'summary';
 
 const PAID_METHODS: PaidRecruitmentMethod[] = [
   'open-recruitment',
@@ -60,7 +60,8 @@ const Recruit = () => {
   const [lastFreeRecruitAt] = useAtom(lastFreeRecruitAtAtom);
   const [totalEarnedGold] = useAtom(totalEarnedGoldAtom);
   const recruitEmployees = useSetAtom(recruitEmployeesAtom);
-  const [result, setResult] = useState<Employee | null>(null);
+  const [recruitResults, setRecruitResults] = useState<Employee[]>([]);
+  const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [resultMethod, setResultMethod] = useState<RecruitmentMethod | null>(null);
   const [isRecruiting, setIsRecruiting] = useState(false);
   const [recruitAnimationPhase, setRecruitAnimationPhase] = useState<RecruitAnimationPhase>('idle');
@@ -72,13 +73,14 @@ const Recruit = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const resultImage = useMemo(
-    () => EMPLOYEE_TEMPLATES.find(template => template.id === result?.templateId)?.image,
-    [result],
+  const currentResult = recruitResults[currentResultIndex] ?? null;
+  const currentResultImage = useMemo(
+    () => EMPLOYEE_TEMPLATES.find(template => template.id === currentResult?.templateId)?.image,
+    [currentResult],
   );
   const freeRecruitLabel = getFreeRecruitLabel(lastFreeRecruitAt, now);
   const isFreeRecruitAvailable = freeRecruitLabel === '무료 채용';
-  const signatureColor = result ? GRADE_COLORS[result.grade] : '#0080FF';
+  const signatureColor = currentResult ? GRADE_COLORS[currentResult.grade] : '#0080FF';
 
   const onRecruit = async (method: RecruitmentMethod, count = 1) => {
     if (isRecruiting) return;
@@ -87,7 +89,8 @@ const Recruit = () => {
     try {
       const employees = await recruitEmployees({ method, count });
       if (employees?.[0]) {
-        setResult(employees[0]);
+        setRecruitResults(employees);
+        setCurrentResultIndex(0);
         setResultMethod(method);
         setRecruitAnimationKey(currentKey => currentKey + 1);
         setRecruitAnimationPhase('signature');
@@ -190,21 +193,21 @@ const Recruit = () => {
           </View>
         </View>
 
-        {result ? (
+        {currentResult ? (
           <View style={styles.resultSection}>
             <Text style={styles.sectionTitle}>{resultMethod ? `${RECRUITMENT_METHODS[resultMethod].name} 결과` : '채용 결과'}</Text>
             <View style={styles.resultCard}>
-              <View style={[styles.gradeBadge, { backgroundColor: GRADE_COLORS[result.grade] }]}>
-                <Text style={styles.gradeText}>{result.grade}</Text>
+              <View style={[styles.gradeBadge, { backgroundColor: GRADE_COLORS[currentResult.grade] }]}>
+                <Text style={styles.gradeText}>{currentResult.grade}</Text>
               </View>
-              {resultImage ? <Image source={resultImage} style={styles.characterImage} resizeMode="contain" /> : null}
-              <Text style={styles.employeeName}>{result.name}</Text>
-              <Text style={styles.employeeJob}>{result.job}</Text>
+              {currentResultImage ? <Image source={currentResultImage} style={styles.characterImage} resizeMode="contain" /> : null}
+              <Text style={styles.employeeName}>{currentResult.name}</Text>
+              <Text style={styles.employeeJob}>{currentResult.job}</Text>
               <View style={styles.workValue}>
                 <Text style={styles.workValueLabel}>업무 기여도</Text>
-                <Text style={styles.workValueNumber}>{result.workValue}</Text>
+                <Text style={styles.workValueNumber}>{currentResult.workValue}</Text>
               </View>
-              <EmployeeStatRadar stats={result.stats} size={210} />
+              <EmployeeStatRadar stats={currentResult.stats} size={210} />
             </View>
             <Text style={styles.gradeHint}>
               등급은 육각형 스탯의 가중 평균으로 결정됩니다. 모든 스탯이 100이면 SSS+입니다.
@@ -226,12 +229,12 @@ const Recruit = () => {
             source={Assets.Lotties.SIGN}
             style={styles.signatureLottie}
             colorFilters={[{ keypath: 'surface2557', color: signatureColor }]}
-            onAnimationFinish={() => setRecruitAnimationPhase('result')}
+            onAnimationFinish={() => setRecruitAnimationPhase('reveal')}
           />
         </View>
       ) : null}
 
-      {recruitAnimationPhase === 'result' && result ? (
+      {recruitAnimationPhase === 'reveal' && currentResult ? (
         <View style={styles.resultOverlay}>
           <View pointerEvents="none" style={styles.confettiLayer}>
             <LottieView
@@ -242,20 +245,90 @@ const Recruit = () => {
               style={styles.confettiLottie}
             />
           </View>
-          <Animation_View animation={AnimationType.FADE_IN} endTiming={400} style={styles.resultAnimationContainer}>
+          <Animation_View
+            key={`reveal-${currentResult.id}`}
+            animation={AnimationType.FADE_IN}
+            endTiming={400}
+            style={styles.resultAnimationContainer}
+          >
             <View style={styles.resultRevealCard}>
-              <View style={[styles.gradeBadge, { backgroundColor: GRADE_COLORS[result.grade] }]}>
-                <Text style={styles.gradeText}>{result.grade}</Text>
+              <Text style={styles.revealProgress}>{currentResultIndex + 1} / {recruitResults.length}</Text>
+              <View style={[styles.gradeBadge, { backgroundColor: GRADE_COLORS[currentResult.grade] }]}>
+                <Text style={styles.gradeText}>{currentResult.grade}</Text>
               </View>
-              {resultImage ? <Image source={resultImage} style={styles.revealCharacterImage} resizeMode="contain" /> : null}
-              <Text style={styles.revealName}>{result.name}</Text>
-              <Text style={styles.employeeJob}>{result.job}</Text>
+              {currentResultImage ? <Image source={currentResultImage} style={styles.revealCharacterImage} resizeMode="contain" /> : null}
+              <Text style={styles.revealName}>{currentResult.name}</Text>
+              <Text style={styles.employeeJob}>{currentResult.job}</Text>
               <View style={styles.workValue}>
                 <Text style={styles.workValueLabel}>업무 기여도</Text>
-                <Text style={styles.workValueNumber}>{result.workValue}</Text>
+                <Text style={styles.workValueNumber}>{currentResult.workValue}</Text>
               </View>
-              <EmployeeStatRadar stats={result.stats} size={220} />
+              <EmployeeStatRadar stats={currentResult.stats} size={220} />
             </View>
+            {recruitResults.length === 1 ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setRecruitAnimationPhase('idle')}
+                style={styles.confirmButton}
+              >
+                <Text style={styles.confirmButtonText}>확인</Text>
+              </Pressable>
+            ) : currentResultIndex === recruitResults.length - 1 ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setRecruitAnimationPhase('summary')}
+                style={styles.confirmButton}
+              >
+                <Text style={styles.confirmButtonText}>전체 결과 보기</Text>
+              </Pressable>
+            ) : (
+              <View style={styles.revealActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setRecruitAnimationPhase('summary')}
+                  style={styles.skipButton}
+                >
+                  <Text style={styles.skipButtonText}>건너뛰기</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setCurrentResultIndex(index => index + 1)}
+                  style={styles.nextButton}
+                >
+                  <Text style={styles.confirmButtonText}>다음</Text>
+                </Pressable>
+              </View>
+            )}
+          </Animation_View>
+        </View>
+      ) : null}
+
+      {recruitAnimationPhase === 'summary' ? (
+        <View style={styles.summaryOverlay}>
+          <Animation_View animation={AnimationType.FADE_IN} endTiming={300} style={styles.summaryAnimationContainer}>
+            <Text style={styles.summaryTitle}>채용 결과</Text>
+            <Text style={styles.summarySubtitle}>{recruitResults.length}명의 직원이 새로 합류했습니다.</Text>
+            <ScrollView
+              contentContainerStyle={styles.summaryGrid}
+              showsVerticalScrollIndicator={false}
+              style={styles.summaryScroll}
+            >
+              {recruitResults.map(employee => {
+                const image = EMPLOYEE_TEMPLATES.find(template => template.id === employee.templateId)?.image;
+
+                return (
+                  <View key={employee.id} style={styles.summaryEmployeeCard}>
+                    <View style={[styles.summaryGradeBadge, { backgroundColor: GRADE_COLORS[employee.grade] }]}>
+                      <Text style={styles.summaryGradeText}>{employee.grade}</Text>
+                    </View>
+                    {image ? <Image source={image} style={styles.summaryCharacterImage} resizeMode="contain" /> : null}
+                    <Text numberOfLines={1} style={styles.summaryEmployeeName}>{employee.name}</Text>
+                    <Text numberOfLines={1} style={styles.summaryEmployeeJob}>{employee.job}</Text>
+                    <Text style={styles.summaryWorkValue}>기여도 {employee.workValue}</Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
             <Pressable
               accessibilityRole="button"
               onPress={() => setRecruitAnimationPhase('idle')}
@@ -411,6 +484,8 @@ const styles = StyleSheet.create({
   },
   revealCharacterImage: { width: 174, height: 174 },
   revealName: { color: '#29231F', fontSize: 27, fontWeight: '800' },
+  revealProgress: { marginBottom: 4, color: '#8A7A6B', fontSize: 14, fontWeight: '800' },
+  revealActions: { flexDirection: 'row', width: '100%', maxWidth: 360, gap: 10, marginTop: 14 },
   confirmButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -422,6 +497,73 @@ const styles = StyleSheet.create({
     backgroundColor: '#354D70',
   },
   confirmButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  skipButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    borderWidth: 1,
+    borderColor: '#9A8B7B',
+    borderRadius: 14,
+    backgroundColor: '#F6F0E7',
+  },
+  skipButtonText: { color: '#554A40', fontSize: 15, fontWeight: '800' },
+  nextButton: {
+    flex: 1.45,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#354D70',
+  },
+  summaryOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 10,
+    padding: 20,
+    backgroundColor: '#FFFDF8',
+  },
+  summaryAnimationContainer: { flex: 1, alignItems: 'center', width: '100%' },
+  summaryTitle: { marginTop: 18, color: '#29231F', fontSize: 28, fontWeight: '900' },
+  summarySubtitle: { marginTop: 6, color: '#766B61', fontSize: 14 },
+  summaryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 10,
+    paddingVertical: 20,
+  },
+  summaryScroll: { flex: 1, width: '100%' },
+  summaryEmployeeCard: {
+    position: 'relative',
+    width: '23.5%',
+    alignItems: 'center',
+    overflow: 'hidden',
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#D7C6AF',
+    borderRadius: 12,
+    backgroundColor: '#FFF9F0',
+  },
+  summaryGradeBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    zIndex: 1,
+    minWidth: 22,
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 3,
+    borderRadius: 6,
+  },
+  summaryGradeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  summaryCharacterImage: { width: '100%', aspectRatio: 1 },
+  summaryEmployeeName: { width: '100%', color: '#29231F', fontSize: 12, fontWeight: '800', textAlign: 'center' },
+  summaryEmployeeJob: { width: '100%', marginTop: 2, color: '#766B61', fontSize: 10, textAlign: 'center' },
+  summaryWorkValue: { marginTop: 5, color: '#9A6512', fontSize: 10, fontWeight: '800' },
 });
 
 export default Recruit;
