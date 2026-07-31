@@ -1,5 +1,5 @@
-import { open, QuickSQLiteConnection } from 'react-native-quick-sqlite';
-import { Employee, EmployeeGrade, EmployeeStats } from '@/models';
+import { open, type DB } from '@op-engineering/op-sqlite';
+import { Employee, EmployeeGrade } from '@/models';
 
 const DATABASE_NAME = 'daily-game.sqlite';
 
@@ -34,7 +34,7 @@ export type PlayerSnapshot = {
   employees: Employee[];
 };
 
-let database: QuickSQLiteConnection | null = null;
+let database: DB | null = null;
 let initialization: Promise<void> | null = null;
 
 const getDatabase = () => {
@@ -68,7 +68,7 @@ const initializeDatabase = async () => {
 
   initialization = (async () => {
     const db = getDatabase();
-    await db.executeBatchAsync([
+    await db.executeBatch([
       [
         `CREATE TABLE IF NOT EXISTS player_state (
           id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -109,10 +109,10 @@ export const playerDatabase = {
     await initializeDatabase();
     const db = getDatabase();
     const [playerResult, employeeResult] = await Promise.all([
-      db.executeAsync('SELECT gold, total_earned_gold, total_recruit_count, last_free_recruit_at FROM player_state WHERE id = 1'),
-      db.executeAsync('SELECT * FROM employees ORDER BY recruited_at DESC'),
+      db.execute('SELECT gold, total_earned_gold, total_recruit_count, last_free_recruit_at FROM player_state WHERE id = 1'),
+      db.execute('SELECT * FROM employees ORDER BY recruited_at DESC'),
     ]);
-    const player = playerResult.rows?._array[0] as PlayerRow | undefined;
+    const player = playerResult.rows[0] as PlayerRow | undefined;
 
     if (!player) {
       throw new Error('플레이어 저장 데이터를 불러오지 못했습니다.');
@@ -123,7 +123,7 @@ export const playerDatabase = {
       totalEarnedGold: player.total_earned_gold,
       totalRecruitCount: player.total_recruit_count,
       lastFreeRecruitAt: player.last_free_recruit_at,
-      employees: (employeeResult.rows?._array ?? []).map(row => mapEmployee(row as EmployeeRow)),
+      employees: employeeResult.rows.map(row => mapEmployee(row as EmployeeRow)),
     };
   },
 
@@ -137,12 +137,12 @@ export const playerDatabase = {
     const db = getDatabase();
 
     await db.transaction(async transaction => {
-      await transaction.executeAsync(
+      await transaction.execute(
         'UPDATE player_state SET gold = ?, total_recruit_count = ?, last_free_recruit_at = ? WHERE id = 1',
         [gold, totalRecruitCount, lastFreeRecruitAt],
       );
       for (const employee of employees) {
-        await transaction.executeAsync(
+        await transaction.execute(
           `INSERT INTO employees (
             id, template_id, name, job, work_skill, creativity, diligence, teamwork,
             leadership, luck, work_value, grade, recruited_at
@@ -169,7 +169,7 @@ export const playerDatabase = {
 
   async saveGold({ gold, totalEarnedGold }: Pick<PlayerSnapshot, 'gold' | 'totalEarnedGold'>): Promise<void> {
     await initializeDatabase();
-    await getDatabase().executeAsync(
+    await getDatabase().execute(
       'UPDATE player_state SET gold = ?, total_earned_gold = ? WHERE id = 1',
       [gold, totalEarnedGold],
     );
