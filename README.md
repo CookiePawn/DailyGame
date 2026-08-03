@@ -1,241 +1,111 @@
-# 채용왕 (Project Codename)
- 
-> **좋은 직원을 뽑고 장착해, 더 많은 채용 자금을 만드는 현실 회사 테마 방치형 뽑기 게임**
+# 채용왕
 
-![Concept UI](./docs/image_01.png)
+직원을 뽑고, 프로젝트 팀에 편성해 골드를 벌며 회사를 성장시키는 캐주얼 방치형 채용 게임이다.
 
----
+## 게임 핵심
 
-## 1. 제품 방향
-
-플레이어는 회사의 대표가 되어 다양한 직원을 채용하고 수집한다.
-게임의 중심은 **직원 뽑기**이며, 좋은 직원을 획득하고 장착하는 것이 가장 중요한 목표다.
-
-프로젝트 수행은 사용자가 직접 조작하거나 반복해서 파견하는 콘텐츠가 아니다.
-장착한 직원들의 능력치에 따라 골드를 자동으로 생산하는 **자금 생성 시스템**이다.
-획득한 골드는 다시 채용에 사용되어 더 좋은 직원을 얻는 데 쓰인다.
-
----
-
-## 2. 핵심 재미
-
-- 더 높은 등급의 직원을 뽑는 기대감
-- 원하는 직군·능력치의 직원을 수집하는 만족감
-- 좋은 직원을 장착했을 때 즉시 늘어나는 수익
-- 수익 증가로 더 자주, 더 높은 등급의 채용을 할 수 있는 성장감
-
-낮은 등급의 직원 활용, 합성, 연구, 인테리어, 랭킹 등은 핵심 루프가 검증된 뒤 추가한다.
-
----
-
-## 3. 핵심 루프
+가장 중요한 재미는 **직원 뽑기**다. 프로젝트는 별도 조작 없이 장착한 직원이 자동으로 골드를 생산하는 수단이며, 골드는 다시 더 좋은 직원을 채용하거나 회사를 확장하는 데 사용한다.
 
 ```text
-직원 뽑기
-  ↓
-좋은 직원 획득
-  ↓
-직원 장착 또는 교체
-  ↓
-장착 직원 능력치만큼 골드 자동 획득
-  ↓
-골드로 추가 채용
-  ↓
-더 좋은 직원 획득
-  ↓
-반복
+채용 → 직원 수집 → 프로젝트 팀 편성 → 자동 수익 → 재채용 또는 회사 확장 → 반복
 ```
 
----
+## 현재 구현 범위
 
-## 4. MVP 범위
+### 홈
 
-첫 검증 버전에서는 아래 세 화면과 하나의 자동 수익 시스템만 구현한다.
+- 보유 골드와 초당 수익
+- 장착 직원의 자동 프로젝트 진행 상태
+- 앱 재실행·백그라운드 복귀 시 오프라인 수익 정산 팝업
+- 회사 단계, 다음 확장 조건과 비용, 확장 버튼
 
-### Home
+### 채용
 
-- 현재 골드
-- 분당 수익
-- 장착 중인 직원 (최대 5명)
-- 자동 프로젝트 진행 상태
-- 누적 보상 및 보상 받기
-- 채용 화면, 직원 화면 이동
+- 무료 채용: 1시간마다 1회
+- 일반 채용: 1,000 골드 / 10회 채용은 9,000 골드
+- 경력직 채용: 10,000 골드, 누적 채용 10회 후 해금
+- 헤드헌팅: 50,000 골드, 누적 채용 30회·누적 수익 100,000 후 해금
+- 1회·10회 결과 연출, 개별 결과 넘기기·건너뛰기·전체 결과 보기
+- 서명 로티는 뽑기 결과 중 **가장 높은 등급** 색상으로 표시
 
-### Recruit
+### 직원 / 프로젝트 팀
 
-- 무료 채용
-- 골드 채용
-- 채용 결과
-- 직원 등급별 결과 연출
-- 채용 확률 정보
+- 보유 직원 4열 목록
+- 카드 탭 시 육각형 능력치 상세 보기
+- 회사 단계에 따른 최대 인원만큼 프로젝트 팀 편성
+- 팀 편성·해제는 로컬 DB에 저장
+- 직군 조합 시너지와 회사 보너스가 초당 수익에 반영
 
-### Employees
+## 직원
 
-- 보유 직원 목록
-- 직원 상세 능력치
-- 직원 장착·해제
-- 장착 인원 최대 5명 제한
-- 등급 및 생산성 기준 정렬
-
----
-
-## 5. 자동 수익 시스템
-
-프로젝트는 장착된 직원이 자동으로 수행한다. 사용자는 프로젝트를 직접 시작하거나 관리할 필요가 없다.
-
-초기 검증에서는 직원의 `생산성`만 실제 수익 계산에 사용한다.
-
-```text
-분당 수익 = 장착 직원의 생산성 합계
-```
-
-- 장착 직원을 교체하면 분당 수익이 즉시 바뀐다.
-- 앱이 종료된 동안에도 수익이 누적된다.
-- 사용자가 홈에서 누적 골드를 수령한다.
-- 오프라인 보상에는 추후 최대 누적 시간을 적용할 수 있다.
-
----
-
-## 6. 직원과 채용
-
-### 직원 데이터 (초기)
+직원은 채용 시 랜덤 스탯과 등급을 가진다.
 
 ```ts
 type Employee = {
   id: string;
   name: string;
-  grade: 'D' | 'C' | 'B' | 'A' | 'S' | 'SS' | 'SSS';
   job: string;
-  productivity: number;
+  grade: 'D' | 'C' | 'B' | 'A' | 'S' | 'SS' | 'SSS' | 'SSS+';
+  stats: {
+    workSkill: number;  // 업무 스킬
+    creativity: number; // 창의성
+    diligence: number;  // 성실
+    teamwork: number;   // 협업
+    leadership: number; // 리더십
+    luck: number;       // 행운
+  };
 };
 ```
 
-### 채용 방식 (초기)
+`SSS+`는 6개 스탯이 모두 100인 특별 등급이다.
 
-- 무료 채용: 일정 시간마다 가능
-- 골드 채용: 골드를 소모해 즉시 가능
-- 결과: 확률에 따라 직원 1명 획득
+## 수익 계산
 
-10연차, 추천 채용, 헤드헌팅, 젬 채용은 MVP 검증 후 추가한다.
+직원의 6각형 스탯을 직접 사용한다.
 
----
+```text
+직원 점수 =
+업무 스킬×30% + 창의성×22% + 성실×16% + 협업×15% + 리더십×10% + 행운×7%
 
-## 7. 검증할 가설
-
-이 MVP에서는 아래 질문에 답하는 것을 목표로 한다.
-
-1. 사용자는 더 좋은 직원을 얻기 위해 반복 채용을 하고 싶어 하는가?
-2. 더 좋은 직원을 얻었을 때 기존 직원을 교체·장착하고 싶어 하는가?
-3. 수익 증가가 다음 채용을 위한 충분한 동기가 되는가?
-4. 자동 수익을 수령하기 위해 다시 앱에 접속하는가?
-
----
-
-## 8. MVP에서 제외하는 요소
-
-- 회사 레벨 및 회사 업그레이드
-- 지역 선택과 능동적 탐험·프로젝트 관리
-- 직원 합성, 연구, 인테리어
-- 랭킹, 길드, 친구
-- 출석, 우편함, 일일 미션
-- 광고 보상, 결제, 상점
-- 로그인 및 서버 동기화
-
-위 기능은 뽑기 → 장착 → 자동 수익 → 재채용 루프가 재미있다고 검증된 뒤 추가한다.
-
----
-
-## 9. 초기 데이터 저장
-
-서버 없이 기기 로컬 저장으로 시작한다.
-
-```ts
-type PlayerState = {
-  gold: number;
-  employees: Employee[];
-  equippedEmployeeIds: string[];
-  lastRewardClaimedAt: number;
-  lastFreeRecruitAt: number | null;
-};
+초당 기본 수익 = floor(장착 직원 점수 합계 / 10)
+최종 초당 수익 = floor(기본 수익 × 직군 시너지 × 회사 보너스)
 ```
 
-앱 재실행 시 `lastRewardClaimedAt`과 현재 시각의 차이로 누적 수익을 계산한다.
+직군 적성 보너스:
 
----
+- 개발자 +12%
+- 디자이너 +10%
+- 기획자 +8%
 
-## 10. 구현 순서
+팀 시너지(3명 이상 편성 시):
 
-1. 등급별 채용 확률, 채용 비용, 생산성 범위를 정한다.
-2. 로컬 저장을 포함한 플레이어·직원 상태를 만든다.
-3. 직원 장착과 분당 수익 계산을 구현한다.
-4. 자동 수익 및 오프라인 보상 계산을 구현한다.
-5. 채용과 결과 화면을 구현한다.
-6. 홈과 직원 화면을 연결하고 실제 플레이 흐름을 검증한다.
-7. 검증 결과에 따라 채용 연출, 10연차, 추가 능력치와 부가 콘텐츠를 확장한다.
+- 개발자 + 기획자 + 디자이너: `드림팀 +20%`
+- 동일 직군 3명: `전문 팀 +15%`
+- 개발자 2 + 기획자, 개발자 2 + 디자이너, 기획자 2 + 디자이너: `+12%`
+- 그 외 3명 이상 조합: `협업 보너스 +5%`
 
----
+## 회사 성장
 
-## 프롬프트
+회사는 조건을 만족한 뒤 골드를 지불해 확장한다. 확장하면 최대 편성 인원과 전체 프로젝트 수익 보너스가 증가한다.
 
-**캐릭터 생성**
+| 단계 | 해금 조건 | 확장 비용 | 최대 인원 | 수익 보너스 |
+|---|---|---:|---:|---:|
+| 팀 프로젝트 | 시작 | 무료 | 3명 | +0% |
+| 스타트업 | 누적 수익 100,000 · 직원 3명 | 50,000 | 4명 | +5% |
+| 중소기업 | 누적 수익 1,000,000 · 직원 10명 | 300,000 | 5명 | +10% |
+| 중견기업 | 누적 수익 10,000,000 · 직원 20명 | 2,000,000 | 6명 | +15% |
+| 대기업 | 누적 수익 100,000,000 · 직원 40명 | 15,000,000 | 8명 | +22% |
+| 유니콘 기업 | 누적 수익 1,000,000,000 · 직원 70명 | 100,000,000 | 10명 | +30% |
 
-![Character EX](./docs/character_ex.png)
-```
-Use the attached image as a strict visual-production reference.
+## 저장
 
-Create one NEW Korean workplace character.
-The character identity, job, hairstyle, clothes, pose, facial features, and prop must be original and different from every character in the reference image.
+- `@op-engineering/op-sqlite` 사용
+- 골드, 누적 수익, 채용 이력, 직원, 팀 편성, 무료 채용 시간, 마지막 수익 정산 시각, 회사 단계를 기기 로컬 SQLite에 저장
+- 앱이 꺼져 있거나 백그라운드에 있던 시간은 복귀 시 자동 정산한다.
 
-However, do not reinterpret, modernize, redesign, or invent a new art style.
-Match the reference image's character design system as closely as possible:
+## 이후 확장 후보
 
-- Same head-to-body proportion: oversized rounded head, compact narrow shoulders, short upper body
-- Same face construction: large dark oval eyes, tiny simple nose, small subtle mouth, soft rounded jaw
-- Same hairstyle rendering: dark outlined hair clumps with simple internal shading
-- Same black/dark-brown outline thickness and clean line quality
-- Same warm beige, brown, charcoal, and muted-color palette
-- Same soft, simple cel shading with minimal texture
-- Same 2D Korean casual mobile game employee-card illustration look
-- Same friendly, slightly chibi but adult workplace-character feeling
-- Same level of detail and visual simplicity
-- Same centered waist-up collectible employee portrait composition
-
-Create:
-Randomly invent one original Korean workplace character.
-
-Randomly select exactly one job, then design the clothing, prop, hairstyle, expression, and pose to clearly communicate that job.
-
-Use a wide variety of workplaces and roles:
-software developer, game developer, UX designer, illustrator, video editor, marketer, social-media manager, product planner, photographer, barista, florist, chef, baker, delivery rider, warehouse worker, factory technician, construction supervisor, laboratory researcher, veterinarian, nurse, teacher, librarian, fitness trainer, hair stylist, mechanic, hotel receptionist, flight attendant, firefighter, police officer, security guard, office manager, accountant, lawyer, or startup founder.
-
-Important variety rules:
-- Do NOT default to a business suit, dress shirt with tie, blazer, formal office uniform, or generic corporate outfit.
-- A business suit may appear only when the randomly chosen role genuinely requires it, such as lawyer, executive, accountant, hotel receptionist, or sales manager.
-- Choose clothing that visually fits the selected job: hoodie, cardigan, apron, work jacket, lab coat, athletic wear, safety vest, utility uniform, casual shirt, knitwear, chef uniform, or other role-appropriate clothing.
-- Include exactly one role-appropriate prop: laptop, tablet, camera, sketchbook, coffee tool, flower bouquet, clipboard, toolbox, microscope, book, dumbbell, hair dryer, wrench, package, or other appropriate item.
-- Make the character clearly distinct from prior outputs in job, silhouette, clothing color, hairstyle, prop, and pose.
-
-Composition:
-1:1 square canvas.
-One character only.
-Waist-up portrait.
-Character centered.
-Keep the entire head, shoulders, arms, hands, and prop inside the frame.
-Use the same compact portrait framing as the attached reference.
-Make the character large and tightly framed, occupying approximately 88–92% of the canvas height.
-Keep only a minimal safety margin around the outermost parts of the character.
-Do not leave large empty padding or unused space.
-No card border, no UI, no labels.
-
-Background:
-Perfectly flat solid #00FF00 chroma-key background.
-No shadow, floor, gradient, decoration, or environment.
-
-Strict constraints:
-Style-match the attached reference image closely.
-Do not make the character semi-realistic, painterly, glossy 3D, anime with large sparkly eyes, or generic vector art.
-Do not add text, letters, logos, symbols, watermark, signature, or extra objects.
-Do not use #00FF00 in the character.
-Avoid generic suited office workers unless a formal outfit is essential to the selected role.
-For each new generation, create a noticeably different employee concept from previous outputs.
-```
+- 프로젝트 종류별 요구 스탯과 보상 차별화
+- 회사 단계별 신규 채용 방식·특별 프로젝트 해금
+- 직원 성장, 중복 직원 활용, 연구, 인테리어, 일일 콘텐츠
+- 서버 동기화와 경제 밸런싱
