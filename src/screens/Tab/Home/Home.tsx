@@ -137,7 +137,8 @@ const Home = () => {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <ImageBackground source={officeBackground} resizeMode="cover" style={styles.background}>
+      <View style={styles.safeArea}>
       <Modal
         animationType="fade"
         transparent
@@ -172,7 +173,7 @@ const Home = () => {
           </View>
         </View>
 
-        <ImageBackground source={officeBackground} resizeMode="cover" style={styles.sceneArea}>
+        <View style={styles.sceneArea}>
           <View style={styles.projectBanner}>
             <View>
               <Text style={styles.projectBannerTitle}>{isWorking ? '팀 프로젝트 진행 중...' : '팀 프로젝트 대기 중'}</Text>
@@ -205,7 +206,7 @@ const Home = () => {
               <Text style={styles.sceneEmptyText}>직원 관리에서 최대 {maxTeamSize}명을 장착할 수 있어요.</Text>
             </View>
           ) : null}
-        </ImageBackground>
+        </View>
 
         <View style={styles.bottomHud}>
           <View style={styles.companyPanelHeader}>
@@ -240,14 +241,15 @@ const Home = () => {
           ) : null}
         </View>
       </View>
-    </View>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   background: { flex: 1, backgroundColor: '#17213B' },
-  safeArea: { flex: 1, backgroundColor: '#121A31' },
-  screen: { flex: 1, backgroundColor: '#121A31' },
+  safeArea: { flex: 1 },
+  screen: { flex: 1 },
   header: { zIndex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 10, backgroundColor: '#11192F' },
   greeting: { color: '#BFC9EB', fontSize: 10, fontWeight: '800' },
   companyName: { marginTop: 2, color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
   companyExpandButtonDisabled: { backgroundColor: '#C9CEDD' },
   companyExpandButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
   companyComplete: { marginTop: 12, color: '#5D6CCC', fontSize: 12, fontWeight: '900' },
-  sceneArea: { position: 'relative', flex: 1, overflow: 'hidden', backgroundColor: '#263B67' },
+  sceneArea: { position: 'relative', flex: 1, overflow: 'hidden' },
   projectBanner: { position: 'absolute', top: 0, right: 0, left: 0, zIndex: 3, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 10, backgroundColor: 'rgba(22, 48, 105, 0.94)' },
   projectBannerTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
   projectBannerTime: { marginTop: 3, color: '#CAD8FF', fontSize: 9, fontWeight: '700' },
@@ -283,7 +285,7 @@ const styles = StyleSheet.create({
   projectBannerStatusText: { color: '#DDE6FF', fontSize: 9, fontWeight: '900' },
   sceneShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(10, 18, 42, 0.08)' },
   sceneEmployees: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 2 },
-  bottomHud: { zIndex: 3, padding: 15, backgroundColor: '#17213B' },
+  bottomHud: { zIndex: 3, minHeight: 225, padding: 18, borderTopLeftRadius: 25, borderTopRightRadius: 25, backgroundColor: 'rgba(20, 29, 53, 0.96)' },
   companyPanelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   companyPanelLabel: { color: '#8F9BC0', fontSize: 10, fontWeight: '800' },
   companyPanelTitle: { marginTop: 3, color: '#FFFFFF', fontSize: 17, fontWeight: '900' },

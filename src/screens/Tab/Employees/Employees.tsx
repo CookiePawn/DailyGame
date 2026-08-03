@@ -6,15 +6,15 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useAtom, useSetAtom } from 'jotai';
-import { EmployeeStatRadar } from '@/components';
+import { EmployeeStatRadar, Typography } from '@/components';
 import { EMPLOYEE_TEMPLATES, GRADE_COLORS } from '@/constants';
 import {
   employeesAtom,
   equippedEmployeeIdsAtom,
+  autoEquipBestEmployeesAtom,
   goldAtom,
   incomePerSecondAtom,
   maxTeamSizeAtom,
@@ -43,16 +43,16 @@ const TeamMemberCard = ({ employee, slot, isUpdating, onDetail, onRemove }: Team
 
   return (
     <View style={styles.teamMemberCard}>
-      <View style={styles.slotBadge}><Text style={styles.slotBadgeText}>{slot}</Text></View>
+      <View style={styles.slotBadge}><Typography style={styles.slotBadgeText}>{slot}</Typography></View>
       <Pressable accessibilityRole="button" onPress={() => onRemove(employee.id)} style={styles.removeButton}>
-        <Text style={styles.removeButtonText}>×</Text>
+        <Typography style={styles.removeButtonText}>×</Typography>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={() => onDetail(employee)} style={styles.teamMemberContent}>
         {image ? <Image source={image} style={styles.teamMemberImage} resizeMode="contain" /> : null}
-        <Text numberOfLines={1} style={styles.teamMemberName}>{employee.name}</Text>
+        <Typography numberOfLines={1} style={styles.teamMemberName}>{employee.name}</Typography>
         <View style={styles.teamMemberJobRow}>
-          <Text numberOfLines={1} style={styles.teamMemberJob}>{employee.job}</Text>
-          {slot === 1 ? <Text style={styles.leaderBadge}>리더</Text> : null}
+          <Typography numberOfLines={1} style={styles.teamMemberJob}>{employee.job}</Typography>
+          {slot === 1 ? <Typography style={styles.leaderBadge}>리더</Typography> : null}
         </View>
       </Pressable>
       {isUpdating ? <View style={styles.updatingOverlay} /> : null}
@@ -73,14 +73,13 @@ const OwnedEmployeeCard = ({ employee, isUpdating, onDetail, onSelect }: OwnedEm
   return (
     <View style={styles.ownedEmployeeCard}>
       <View style={[styles.gradeBadge, { backgroundColor: GRADE_COLORS[employee.grade] }]}>
-        <Text style={styles.gradeText}>{employee.grade}</Text>
+        <Typography style={styles.gradeText}>{employee.grade}</Typography>
       </View>
-      <Text style={styles.favoriteIcon}>☆</Text>
       <Pressable accessibilityRole="button" onPress={() => onDetail(employee)} style={styles.ownedEmployeeContent}>
         {image ? <Image source={image} style={styles.ownedEmployeeImage} resizeMode="contain" /> : null}
-        <Text numberOfLines={1} style={styles.ownedEmployeeName}>{employee.name}</Text>
-        <Text numberOfLines={1} style={styles.ownedEmployeeJob}>{employee.job}</Text>
-        <Text style={styles.ownedEmployeeValue}>기여도 {employee.workValue}</Text>
+        <Typography numberOfLines={1} style={styles.ownedEmployeeName}>{employee.name}</Typography>
+        <Typography numberOfLines={1} style={styles.ownedEmployeeJob}>{employee.job}</Typography>
+        {/* <Typography style={styles.ownedEmployeeValue}>기여도 {employee.workValue}</Typography> */}
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -88,7 +87,7 @@ const OwnedEmployeeCard = ({ employee, isUpdating, onDetail, onSelect }: OwnedEm
         onPress={() => onSelect(employee.id)}
         style={({ pressed }) => [styles.selectButton, (pressed || isUpdating) && styles.disabledButton]}
       >
-        <Text style={styles.selectButtonText}>선택</Text>
+        <Typography style={styles.selectButtonText}>선택</Typography>
       </Pressable>
     </View>
   );
@@ -102,8 +101,10 @@ const Employees = () => {
   const [teamSynergy] = useAtom(teamSynergyAtom);
   const [maxTeamSize] = useAtom(maxTeamSizeAtom);
   const toggleEquippedEmployee = useSetAtom(toggleEquippedEmployeeAtom);
+  const autoEquipBestEmployees = useSetAtom(autoEquipBestEmployeesAtom);
   const [sortMode, setSortMode] = useState<SortMode>('grade');
   const [updatingEmployeeId, setUpdatingEmployeeId] = useState<string | null>(null);
+  const [isAutoEquipping, setIsAutoEquipping] = useState(false);
   const [detailEmployee, setDetailEmployee] = useState<Employee | null>(null);
 
   const equippedEmployees = useMemo(
@@ -135,37 +136,49 @@ const Employees = () => {
     }
   };
 
+  const onAutoEquip = async () => {
+    if (isAutoEquipping || updatingEmployeeId !== null) return;
+
+    setIsAutoEquipping(true);
+    try {
+      await autoEquipBestEmployees();
+    } catch (error) {
+      console.error('직원을 자동 편성하지 못했습니다.', error);
+    } finally {
+      setIsAutoEquipping(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <View style={styles.backIcon}><Text style={styles.backIconText}>‹</Text></View>
-          <Text style={styles.title}>프로젝트 팀 편성</Text>
-          <View style={styles.goldPill}><Text style={styles.goldCoin}>●</Text><Text style={styles.goldText}>{gold.toLocaleString('ko-KR')}</Text></View>
+          <View style={styles.backIcon}><Typography style={styles.backIconText}>‹</Typography></View>
+          <Typography style={styles.title}>프로젝트 팀 편성</Typography>
+          <View style={styles.goldPill}><Typography style={styles.goldCoin}>●</Typography><Typography style={styles.goldText}>{gold.toLocaleString('ko-KR')}</Typography></View>
         </View>
 
         <View style={styles.projectSummary}>
-          <View style={styles.projectIcon}><Text style={styles.projectIconText}>⌘</Text></View>
+          <View style={styles.projectIcon}><Typography style={styles.projectIconText}>⌘</Typography></View>
           <View style={styles.projectInfo}>
             <View style={styles.projectTitleRow}>
-              <Text style={styles.projectTitle}>신규 모바일 게임 개발</Text>
-              <Text style={styles.projectTag}>개발</Text>
+              <Typography style={styles.projectTitle}>신규 모바일 게임 개발</Typography>
+              <Typography style={styles.projectTag}>개발</Typography>
             </View>
             <View style={styles.projectMetrics}>
-              <Text style={styles.projectMetric}>예상 기간 06:00:00</Text>
-              <Text style={styles.projectMetric}>성공률 <Text style={styles.projectSuccess}>{projectSuccessRate}%</Text></Text>
-              <Text style={styles.projectMetric}>수익 +{incomePerSecond}/초</Text>
-              {teamSynergy ? <Text style={styles.projectSynergy}>{teamSynergy.name} +{Math.round((teamSynergy.multiplier - 1) * 100)}%</Text> : null}
+              <Typography style={styles.projectMetric}>예상 기간 06:00:00</Typography>
+              <Typography style={styles.projectMetric}>성공률 <Typography style={styles.projectSuccess}>{projectSuccessRate}%</Typography></Typography>
+              <Typography style={styles.projectMetric}>수익 +{incomePerSecond}/초</Typography>
+              {teamSynergy ? <Typography style={styles.projectSynergy}>{teamSynergy.name} +{Math.round((teamSynergy.multiplier - 1) * 100)}%</Typography> : null}
             </View>
           </View>
         </View>
 
         <View style={styles.teamHeader}>
           <View style={styles.teamTitleRow}>
-            <Text style={styles.teamTitle}>현재 팀</Text>
-            <Text style={styles.teamCount}>({equippedEmployees.length}/{maxTeamSize})</Text>
+            <Typography style={styles.teamTitle}>현재 팀</Typography>
+            <Typography style={styles.teamCount}>({equippedEmployees.length}/{maxTeamSize})</Typography>
           </View>
-          <Text style={styles.teamGuide}>프로젝트에 투입할 직원을 선택하세요.</Text>
         </View>
 
         <View style={styles.teamList}>
@@ -181,23 +194,30 @@ const Employees = () => {
           ))}
           {Array.from({ length: maxTeamSize - equippedEmployees.length }).map((_, index) => (
             <View key={`empty-team-${index}`} style={styles.emptyTeamCard}>
-              <Text style={styles.emptyTeamPlus}>+</Text>
-              <Text style={styles.emptyTeamText}>직원 선택</Text>
+              <Typography style={styles.emptyTeamPlus}>+</Typography>
+              <Typography style={styles.emptyTeamText}>직원 선택</Typography>
             </View>
           ))}
         </View>
 
-        <View style={styles.selectGuide}><Text style={styles.selectGuideText}>+ 아래 보유 직원 카드에서 팀원을 선택할 수 있어요.</Text></View>
+        <Pressable
+          accessibilityRole="button"
+          disabled={employees.length === 0 || isAutoEquipping || updatingEmployeeId !== null}
+          onPress={() => void onAutoEquip()}
+          style={[styles.autoEquipButtonFull, (employees.length === 0 || isAutoEquipping || updatingEmployeeId !== null) && styles.autoEquipButtonDisabled]}
+        >
+          <Typography style={styles.autoEquipButtonText}>{isAutoEquipping ? '편성 중...' : '자동 편성'}</Typography>
+        </Pressable>
 
         <View style={styles.divider} />
 
         <View style={styles.ownedHeader}>
           <View style={styles.ownedTabs}>
-            <Text style={styles.activeTab}>보유 직원</Text>
-            <Text style={styles.inactiveTab}>대기 직원</Text>
+            <Typography style={styles.activeTab}>보유 직원</Typography>
+            <Typography style={styles.inactiveTab}>대기 직원</Typography>
           </View>
           <Pressable accessibilityRole="button" onPress={() => setSortMode(mode => mode === 'grade' ? 'workValue' : 'grade')} style={styles.sortButton}>
-            <Text style={styles.sortButtonText}>{sortMode === 'grade' ? '등급순' : '기여도순'} ▾</Text>
+            <Typography style={styles.sortButtonText}>{sortMode === 'grade' ? '등급순' : '기여도순'} ▾</Typography>
           </Pressable>
         </View>
 
@@ -214,7 +234,7 @@ const Employees = () => {
             ))}
           </View>
         ) : (
-          <View style={styles.emptyOwnedState}><Text style={styles.emptyOwnedText}>선택할 수 있는 보유 직원이 없습니다.</Text></View>
+          <View style={styles.emptyOwnedState}><Typography style={styles.emptyOwnedText}>선택할 수 있는 보유 직원이 없습니다.</Typography></View>
         )}
       </ScrollView>
 
@@ -225,16 +245,16 @@ const Employees = () => {
               <>
                 <View style={styles.detailModalHeader}>
                   <View>
-                    <Text style={styles.detailName}>{detailEmployee.name}</Text>
-                    <Text style={styles.detailJob}>{detailEmployee.job}</Text>
+                    <Typography style={styles.detailName}>{detailEmployee.name}</Typography>
+                    <Typography style={styles.detailJob}>{detailEmployee.job}</Typography>
                   </View>
-                  <View style={[styles.detailGrade, { backgroundColor: GRADE_COLORS[detailEmployee.grade] }]}><Text style={styles.detailGradeText}>{detailEmployee.grade}</Text></View>
+                  <View style={[styles.detailGrade, { backgroundColor: GRADE_COLORS[detailEmployee.grade] }]}><Typography style={styles.detailGradeText}>{detailEmployee.grade}</Typography></View>
                 </View>
                 <EmployeeStatRadar stats={detailEmployee.stats} size={235} />
-                <View style={styles.detailValueRow}><Text style={styles.detailValueLabel}>업무 기여도</Text><Text style={styles.detailValue}>{detailEmployee.workValue}</Text></View>
+                <View style={styles.detailValueRow}><Typography style={styles.detailValueLabel}>업무 기여도</Typography><Typography style={styles.detailValue}>{detailEmployee.workValue}</Typography></View>
               </>
             ) : null}
-            <Pressable accessibilityRole="button" onPress={() => setDetailEmployee(null)} style={styles.closeButton}><Text style={styles.closeButtonText}>닫기</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => setDetailEmployee(null)} style={styles.closeButton}><Typography style={styles.closeButtonText}>닫기</Typography></Pressable>
           </View>
         </View>
       </Modal>
@@ -268,6 +288,10 @@ const styles = StyleSheet.create({
   teamTitle: { color: '#202A47', fontSize: 18, fontWeight: '900' },
   teamCount: { marginLeft: 4, color: '#65708B', fontSize: 15, fontWeight: '800' },
   teamGuide: { color: '#7F879B', fontSize: 10, fontWeight: '600' },
+  autoEquipButton: { paddingHorizontal: 11, paddingVertical: 7, borderRadius: 7, backgroundColor: '#5E52D8' },
+  autoEquipButtonFull: { alignItems: 'center', justifyContent: 'center', height: 48, marginTop: 12, borderRadius: 8, backgroundColor: '#5E52D8' },
+  autoEquipButtonDisabled: { opacity: 0.45 },
+  autoEquipButtonText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
   teamList: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, marginTop: 13 },
   teamMemberCard: { position: 'relative', width: '31.8%', overflow: 'hidden', minHeight: 174, borderWidth: 1, borderColor: '#E1E4ED', borderRadius: 8, backgroundColor: '#FFFFFF' },
   teamMemberContent: { alignItems: 'center', paddingTop: 25, paddingHorizontal: 7 },
@@ -297,7 +321,6 @@ const styles = StyleSheet.create({
   ownedEmployeeCard: { position: 'relative', width: '23.5%', overflow: 'hidden', padding: 6, borderWidth: 1, borderColor: '#E3E5ED', borderRadius: 7, backgroundColor: '#FFFFFF' },
   gradeBadge: { position: 'absolute', top: 6, left: 6, zIndex: 1, minWidth: 30, alignItems: 'center', paddingVertical: 4, paddingHorizontal: 4, borderRadius: 5 },
   gradeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
-  favoriteIcon: { position: 'absolute', top: 4, right: 6, zIndex: 1, color: '#B5BBC8', fontSize: 20 },
   ownedEmployeeContent: { alignItems: 'center', paddingTop: 22 },
   ownedEmployeeImage: { width: '100%', height: 75 },
   ownedEmployeeName: { width: '100%', marginTop: 2, color: '#26304B', fontSize: 11, fontWeight: '900', textAlign: 'center' },

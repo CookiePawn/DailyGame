@@ -183,6 +183,18 @@ export const toggleEquippedEmployeeAtom = atom(null, async (get, set, employeeId
   return true;
 });
 
+export const autoEquipBestEmployeesAtom = atom(null, async (get, set) => {
+  const equippedEmployeeIds = get(employeesAtom)
+    .slice()
+    .sort((left, right) => right.workValue - left.workValue || right.recruitedAt - left.recruitedAt)
+    .slice(0, Math.min(3, get(maxTeamSizeAtom)))
+    .map(employee => employee.id);
+
+  await playerDatabase.saveEquippedEmployeeIds(equippedEmployeeIds);
+  set(equippedEmployeeIdsAtom, equippedEmployeeIds);
+  return equippedEmployeeIds;
+});
+
 export const expandCompanyAtom = atom(null, async (get, set) => {
   const currentStage = get(companyStageAtom);
   const nextStage = getCompanyStage(currentStage.level + 1);
